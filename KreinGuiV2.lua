@@ -1,4 +1,4 @@
--- macOS GUI Library for Roblox (Final Fix - No overlay block, Colors bug fixed)
+-- macOS GUI Library for Roblox (Sidebar Layout, No Blur Overlay)
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -22,11 +22,6 @@ function Utility.ApplyStroke(frame, color, thickness)
     s.Parent = frame
     return s
 end
-function Utility.AddBlur(parent, size)
-    local b = Utility.Create("BlurEffect", { Size = size or 10 })
-    b.Parent = parent
-    return b
-end
 
 local Icons = {
     gear = "⚙️", house = "🏠", person = "👤", sparkles = "✨",
@@ -38,8 +33,8 @@ local Icons = {
 local Themes = {
     Dark = {
         Background = Color3.fromRGB(30,30,30),
-        WindowBackground = Color3.fromRGB(45,45,45),
-        TitleBar = Color3.fromRGB(35,35,35),
+        WindowBackground = Color3.fromRGB(40,40,40),
+        Sidebar = Color3.fromRGB(35,35,35),
         Text = Color3.fromRGB(220,220,220),
         SecondaryText = Color3.fromRGB(150,150,150),
         Accent = Color3.fromRGB(0,122,255),
@@ -58,7 +53,7 @@ local Themes = {
     Light = {
         Background = Color3.fromRGB(242,242,247),
         WindowBackground = Color3.fromRGB(255,255,255),
-        TitleBar = Color3.fromRGB(240,240,245),
+        Sidebar = Color3.fromRGB(245,245,250),
         Text = Color3.fromRGB(30,30,30),
         SecondaryText = Color3.fromRGB(100,100,100),
         Accent = Color3.fromRGB(0,122,255),
@@ -128,33 +123,29 @@ function Window.new(options)
     self.Tabs = {}
     self.ActiveTab = nil
 
-local parent = (syn and syn.protect_gui and CoreGui) or game.Players.LocalPlayer:FindFirstChild("PlayerGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    local parent = (syn and syn.protect_gui and CoreGui) or game.Players.LocalPlayer:FindFirstChild("PlayerGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
     self.ScreenGui = Utility.Create("ScreenGui", { Name = "macOS_GUI", Parent = parent, ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
 
-    -- Blur background (non-blocking, bisa klik lewat)
-    self.BlurFrame = Utility.Create("Frame", {
-        BackgroundTransparency = 0.7,
-        BackgroundColor3 = Color3.fromRGB(0,0,0),
-        Size = UDim2.new(1,0,1,0),
-        Parent = self.ScreenGui,
-        ZIndex = 1,
-        Active = false   -- Penting: membuat klik menembus ke bawah
-    })
-    Utility.AddBlur(self.BlurFrame, 15)
-
-    -- Window utama
+    -- Window utama (tanpa blur overlay)
     self.WindowFrame = Utility.Create("Frame", {
-        BackgroundColor3 = self.Colors.WindowBackground, BorderSizePixel = 0,
-        Position = UDim2.new(0.5, -300, 0.5, -200), Size = UDim2.new(0,600,0,400),
-        ClipsDescendants = true, Parent = self.ScreenGui, ZIndex = 2
+        BackgroundColor3 = self.Colors.WindowBackground,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0.5, -300, 0.5, -200),
+        Size = UDim2.new(0,600,0,400),
+        ClipsDescendants = true,
+        Parent = self.ScreenGui,
+        ZIndex = 2
     })
     Utility.Create("UICorner", { CornerRadius = UDim.new(0,12), Parent = self.WindowFrame })
     Utility.ApplyStroke(self.WindowFrame, self.Colors.Stroke, 1)
 
     -- Title bar
     self.TitleBar = Utility.Create("Frame", {
-        BackgroundColor3 = self.Colors.TitleBar, Size = UDim2.new(1,0,0,40),
-        BorderSizePixel = 0, Parent = self.WindowFrame, ZIndex = 3
+        BackgroundColor3 = self.Colors.TitleBar,
+        Size = UDim2.new(1,0,0,40),
+        BorderSizePixel = 0,
+        Parent = self.WindowFrame,
+        ZIndex = 3
     })
     Utility.Create("UICorner", { CornerRadius = UDim.new(12,0), Parent = self.TitleBar })
 
@@ -197,24 +188,44 @@ local parent = (syn and syn.protect_gui and CoreGui) or game.Players.LocalPlayer
         })
     end
 
-    -- Tab container
-    self.TabContainer = Utility.Create("Frame", {
-        BackgroundTransparency = 1, Size = UDim2.new(1,-20,0,32),
-        Position = UDim2.new(0,10,0,46), Parent = self.WindowFrame
+    -- SIDEBAR (kiri) untuk tab
+    self.Sidebar = Utility.Create("Frame", {
+        BackgroundColor3 = self.Colors.Sidebar,
+        BorderSizePixel = 0,
+        Size = UDim2.new(0,160,1,-40),
+        Position = UDim2.new(0,0,0,40),
+        Parent = self.WindowFrame
     })
-    local tabListLayout = Utility.Create("UIListLayout", {
-        FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Left,
-        VerticalAlignment = Enum.VerticalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0,4), Parent = self.TabContainer
+    Utility.Create("UICorner", { CornerRadius = UDim.new(0,12), Parent = self.Sidebar })
+    -- Garis pemisah
+    Utility.Create("Frame", {
+        BackgroundColor3 = self.Colors.Stroke,
+        Size = UDim2.new(0,1,1,0),
+        Position = UDim2.new(1,0,0,0),
+        BorderSizePixel = 0,
+        Parent = self.Sidebar
     })
 
-    -- Content area
+    -- Daftar tab di sidebar
+    self.TabListLayout = Utility.Create("UIListLayout", {
+        Padding = UDim.new(0,2),
+        FillDirection = Enum.FillDirection.Vertical,
+        HorizontalAlignment = Enum.HorizontalAlignment.Center,
+        VerticalAlignment = Enum.VerticalAlignment.Top,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = self.Sidebar
+    })
+
+    -- CONTENT AREA (kanan)
     self.ContentFrame = Utility.Create("Frame", {
-        BackgroundTransparency = 1, Size = UDim2.new(1,-20,1,-88),
-        Position = UDim2.new(0,10,0,82), ClipsDescendants = true, Parent = self.WindowFrame
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1,-164,1,-46),
+        Position = UDim2.new(0,164,0,46),
+        ClipsDescendants = true,
+        Parent = self.WindowFrame
     })
 
-    -- Drag universal (mouse + touch)
+    -- Drag universal
     MakeDraggable(self.TitleBar, self.WindowFrame)
 
     -- Animasi masuk
@@ -227,12 +238,16 @@ end
 
 function Window:CreateTab(options)
     local tab = { Title = options.Title, Icon = options.Icon or Icons.house, Window = self }
+    -- Konten tab (kanan)
     tab.Content = Utility.Create("Frame", {
-        BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), Visible = false,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1,0,1,0),
+        Visible = false,
         Parent = self.ContentFrame
     })
     tab.ScrollingFrame = Utility.Create("ScrollingFrame", {
-        BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0),
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1,0,1,0),
         CanvasSize = UDim2.new(0,0,0,0),
         AutomaticCanvasSize = Enum.AutomaticSize.Y,
         ScrollBarThickness = 3,
@@ -240,54 +255,89 @@ function Window:CreateTab(options)
         Parent = tab.Content
     })
     Utility.Create("UIListLayout", {
-        Padding = UDim.new(0,8), FillDirection = Enum.FillDirection.Vertical,
-        HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0,8),
+        FillDirection = Enum.FillDirection.Vertical,
+        HorizontalAlignment = Enum.HorizontalAlignment.Center,
+        SortOrder = Enum.SortOrder.LayoutOrder,
         Parent = tab.ScrollingFrame
     })
 
+    -- Tombol tab di sidebar
     tab.Button = Utility.Create("TextButton", {
-        BackgroundTransparency = 1, Text = "", Size = UDim2.new(0,0,1,0),
-        AutomaticSize = Enum.AutomaticSize.X, Parent = self.TabContainer
+        BackgroundTransparency = 1,
+        Text = "",
+        Size = UDim2.new(1,-12,0,36),
+        Parent = self.Sidebar
     })
+    Utility.Create("UICorner", { CornerRadius = UDim.new(0,8), Parent = tab.Button })
     local btnLayout = Utility.Create("UIListLayout", {
-        FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center,
-        Padding = UDim.new(0,4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = tab.Button
+        FillDirection = Enum.FillDirection.Horizontal,
+        VerticalAlignment = Enum.VerticalAlignment.Center,
+        Padding = UDim.new(0,8),
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = tab.Button
     })
-    Utility.Create("TextLabel", {
-        BackgroundTransparency = 1, Text = tab.Icon, TextColor3 = self.Colors.Text,
-        Font = Enum.Font.Gotham, TextSize = 14, Size = UDim2.new(0,18,0,18), Parent = tab.Button
+    local iconLabel = Utility.Create("TextLabel", {
+        BackgroundTransparency = 1,
+        Text = tab.Icon,
+        TextColor3 = self.Colors.Text,
+        Font = Enum.Font.Gotham,
+        TextSize = 16,
+        Size = UDim2.new(0,20,0,20),
+        Parent = tab.Button
     })
-    Utility.Create("TextLabel", {
-        BackgroundTransparency = 1, Text = tab.Title, TextColor3 = self.Colors.Text,
-        Font = Enum.Font.Gotham, TextSize = 13, Size = UDim2.new(0,0,1,0),
-        AutomaticSize = Enum.AutomaticSize.X, TextXAlignment = Enum.TextXAlignment.Left, Parent = tab.Button
+    local titleLabel = Utility.Create("TextLabel", {
+        BackgroundTransparency = 1,
+        Text = tab.Title,
+        TextColor3 = self.Colors.Text,
+        Font = Enum.Font.Gotham,
+        TextSize = 13,
+        Size = UDim2.new(1,-30,1,0),
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = tab.Button
     })
-    tab.Underline = Utility.Create("Frame", {
-        BackgroundColor3 = self.Colors.Accent, Size = UDim2.new(1,-10,0,2),
-        Position = UDim2.new(0,5,1,0), BorderSizePixel = 0, Visible = false,
-        AnchorPoint = Vector2.new(0,1), Parent = tab.Button
+    tab.Highlight = Utility.Create("Frame", {
+        BackgroundColor3 = self.Colors.Accent,
+        Size = UDim2.new(0,3,1,-8),
+        Position = UDim2.new(0,4,0.5,-(44-8)/2),
+        BorderSizePixel = 0,
+        Visible = false,
+        Parent = tab.Button
     })
+    Utility.Create("UICorner", { CornerRadius = UDim.new(1,0), Parent = tab.Highlight })
 
-    tab.Button.MouseButton1Click:Connect(function() self:SelectTab(tab) end)
+    tab.Button.MouseButton1Click:Connect(function()
+        self:SelectTab(tab)
+    end)
 
-    -- Method - method komponen (perbaikan: gunakan self.Window.Colors)
+    -- Methods komponen (menggunakan self.Window.Colors)
     function tab:CreateSection(title)
-        local section = { Title = title, Window = self.Window }
+        local section = { Title = title }
         section.Container = Utility.Create("Frame", {
-            BackgroundColor3 = self.Window.Colors.SectionBackground, BorderSizePixel = 0,
-            Size = UDim2.new(0.95,0,0,0), AutomaticSize = Enum.AutomaticSize.Y,
+            BackgroundColor3 = self.Window.Colors.SectionBackground,
+            BorderSizePixel = 0,
+            Size = UDim2.new(0.95,0,0,0),
+            AutomaticSize = Enum.AutomaticSize.Y,
             Parent = self.ScrollingFrame
         })
         Utility.Create("UICorner", { CornerRadius = UDim.new(0,8), Parent = section.Container })
         Utility.ApplyStroke(section.Container, self.Window.Colors.Stroke, 1)
         Utility.Create("TextLabel", {
-            BackgroundTransparency = 1, Text = title, TextColor3 = self.Window.Colors.SecondaryText,
-            Font = Enum.Font.GothamBold, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left,
-            Size = UDim2.new(1,-20,0,24), Position = UDim2.new(0,10,0,8), Parent = section.Container
+            BackgroundTransparency = 1,
+            Text = title,
+            TextColor3 = self.Window.Colors.SecondaryText,
+            Font = Enum.Font.GothamBold,
+            TextSize = 12,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Size = UDim2.new(1,-20,0,24),
+            Position = UDim2.new(0,10,0,8),
+            Parent = section.Container
         })
         section.InnerList = Utility.Create("UIListLayout", {
-            Padding = UDim.new(0,6), FillDirection = Enum.FillDirection.Vertical,
-            HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0,6),
+            FillDirection = Enum.FillDirection.Vertical,
+            HorizontalAlignment = Enum.HorizontalAlignment.Center,
+            SortOrder = Enum.SortOrder.LayoutOrder,
             Parent = section.Container
         })
         section.InnerList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -630,10 +680,10 @@ end
 function Window:SelectTab(tab)
     if self.ActiveTab then
         self.ActiveTab.Content.Visible = false
-        self.ActiveTab.Underline.Visible = false
+        self.ActiveTab.Highlight.Visible = false
     end
     tab.Content.Visible = true
-    tab.Underline.Visible = true
+    tab.Highlight.Visible = true
     self.ActiveTab = tab
 end
 
