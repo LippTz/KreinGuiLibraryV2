@@ -1,4 +1,4 @@
--- KreinGuiV2 Ultimate – Dropdown fix, Notif subtle shift, Light polished, Menu Back
+-- KreinGuiV2 – Complete, No Shortcuts
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -151,7 +151,7 @@ local function MakePremiumButton(parent, text, bgColor, txtColor, zIndex, callba
 end
 
 -- ============================
--- TEMA (Light sudah diperbaiki)
+-- TEMA (6 tema)
 -- ============================
 local Themes = {
     Dark = {
@@ -453,7 +453,7 @@ function Window.new(options)
     self.ActiveTab = nil
     self._updaters = {}
     self._notifQueue = {}
-    self._notifY = 88
+    self._notifBusy = false
 
     self.DefaultSize = UDim2.new(0, 760, 0, 540)
     self.DefaultPos = UDim2.new(0.5, -380, 0.5, -270)
@@ -684,7 +684,7 @@ function Window.new(options)
         Parent = self.ProfileFrame
     })
 
-    -- Profile menu dengan submenu
+    -- Profile menu dengan submenu tema
     local profileMenu = Create("Frame", {
         BackgroundColor3 = self.Colors.DropdownBg,
         BorderSizePixel = 0,
@@ -706,7 +706,6 @@ function Window.new(options)
     local themeNames = {"Dark", "Light", "Ocean", "Sunset", "Midnight", "Forest"}
 
     local function buildMainMenu()
-        -- hapus isi
         for _, child in pairs(profileMenu:GetChildren()) do
             if child:IsA("TextButton") then child:Destroy() end
         end
@@ -743,7 +742,7 @@ function Window.new(options)
         for _, child in pairs(profileMenu:GetChildren()) do
             if child:IsA("TextButton") then child:Destroy() end
         end
-        -- tombol Back
+        -- Back
         Create("TextButton", {
             BackgroundTransparency = 1,
             Text = "← Back",
@@ -779,11 +778,18 @@ function Window.new(options)
 
     menuBtn.MouseButton1Click:Connect(function()
         if not profileMenu.Visible then
-            buildMainMenu() -- selalu mulai dari menu utama
+            buildMainMenu()
             local absPos = menuBtn.AbsolutePosition
             profileMenu.Position = UDim2.new(0, absPos.X - 120, 0, absPos.Y - 30)
         end
         profileMenu.Visible = not profileMenu.Visible
+    end)
+
+    -- Sembunyikan menu saat window digeser (klik title bar)
+    self.TitleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            profileMenu.Visible = false
+        end
     end)
 
     -- Content area
@@ -1000,9 +1006,10 @@ function Window:CreateTab(options)
         local stroke = AddStroke(container, C.SectionStroke, 1, 0.4)
         local lbl = Create("TextLabel", { BackgroundTransparency = 1, Text = options.Title or "Dropdown", TextColor3 = C.Label or C.SubText, Font = Enum.Font.Gotham, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(0.5,0,1,0), Position = UDim2.new(0,12,0,0), ZIndex = 4, Parent = container })
         local selLabel = Create("TextLabel", { BackgroundTransparency = 1, Text = selected, TextColor3 = C.Text, Font = Enum.Font.GothamBold, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Right, Size = UDim2.new(0.45,-28,1,0), Position = UDim2.new(0.5,0,0,0), TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 4, Parent = container })
-        local arrowBtn = Create("TextButton", { Active = true, BackgroundTransparency = 1, Text = "▾", TextColor3 = C.SubText, Font = Enum.Font.GothamBold, TextSize = 11, Size = UDim2.new(0,22,1,0), Position = UDim2.new(1,-26,0,0), ZIndex = 4, Parent = container })
+        local arrowBtn = Create("TextButton", { Active = true, BackgroundColor3 = C.BtnSecondary, BackgroundTransparency = 0.5, BorderSizePixel = 0, Text = "▾", TextColor3 = C.Text, Font = Enum.Font.GothamBold, TextSize = 12, Size = UDim2.new(0,26,1,0), Position = UDim2.new(1,-26,0,0), ZIndex = 4, Parent = container })
+        AddCorner(arrowBtn, 6)
 
-        local listFrame = Create("Frame", { BackgroundColor3 = C.DropdownBg, BorderSizePixel = 0, Size = UDim2.new(0,0,0,0), Visible = false, ZIndex = 200, Parent = self.Gui })
+        local listFrame = Create("Frame", { BackgroundColor3 = C.DropdownBg, BorderSizePixel = 0, Size = UDim2.new(0,0,0,0), Visible = false, ZIndex = 999, Parent = self.Gui })
         AddCorner(listFrame, 9)
         AddStroke(listFrame, C.SectionStroke, 1, 0.4)
         Create("UIListLayout", { Padding = UDim.new(0,2), FillDirection = Enum.FillDirection.Vertical, HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder, Parent = listFrame })
@@ -1011,44 +1018,53 @@ function Window:CreateTab(options)
         local function buildList()
             for _, ch in pairs(listFrame:GetChildren()) do if ch:IsA("TextButton") then ch:Destroy() end end
             for _, item in ipairs(items) do
-                local b = Create("TextButton", { BackgroundTransparency = 0.5, BackgroundColor3 = C.DropdownBg, BorderSizePixel = 0, Text = item, TextColor3 = C.Text, Font = Enum.Font.Gotham, TextSize = 11, Size = UDim2.new(1,0,0,28), ZIndex = 201, Parent = listFrame })
+                local b = Create("TextButton", { BackgroundTransparency = 0.4, BackgroundColor3 = C.DropdownBg, BorderSizePixel = 0, Text = item, TextColor3 = C.Text, Font = Enum.Font.Gotham, TextSize = 12, Size = UDim2.new(1,0,0,28), ZIndex = 1000, Parent = listFrame })
                 AddCorner(b, 6)
                 b.MouseButton1Click:Connect(function() selected = item; selLabel.Text = item; listFrame.Visible = false; callback(item) end)
             end
-            listFrame.Size = UDim2.new(0, container.AbsoluteSize.X, 0, math.min(#items*30+8, 180))
+            listFrame.Size = UDim2.new(0, math.max(container.AbsoluteSize.X, 100), 0, math.min(#items*30+8, 180))
         end
         buildList()
 
         local open = false
-        local function toggleDropdown()
-            open = not open
-            if open then
-                local absPos = container.AbsolutePosition
-                local absSize = container.AbsoluteSize
-                listFrame.Position = UDim2.new(0, absPos.X, 0, absPos.Y + absSize.Y + 2)
-                listFrame.Size = UDim2.new(0, absSize.X, 0, math.min(#items*30+8, 180))
-            end
-            listFrame.Visible = open
+        local function showDropdown()
+            open = true
+            local absPos = container.AbsolutePosition
+            local absSize = container.AbsoluteSize
+            listFrame.Position = UDim2.new(0, absPos.X, 0, absPos.Y + absSize.Y + 2)
+            listFrame.Size = UDim2.new(0, math.max(absSize.X, 100), 0, math.min(#items*30+8, 180))
+            listFrame.Visible = true
         end
-        arrowBtn.MouseButton1Click:Connect(toggleDropdown)
+        local function hideDropdown()
+            open = false
+            listFrame.Visible = false
+        end
 
-        local function onInputBegan(input)
-            if open and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+        arrowBtn.MouseButton1Click:Connect(function()
+            if open then hideDropdown() else showDropdown() end
+        end)
+
+        local function onClickOutside(input)
+            if not open then return end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 local pos = input.Position
-                if not (pos.X >= listFrame.AbsolutePosition.X and pos.X <= listFrame.AbsolutePosition.X + listFrame.AbsoluteSize.X and pos.Y >= listFrame.AbsolutePosition.Y and pos.Y <= listFrame.AbsolutePosition.Y + listFrame.AbsoluteSize.Y) then
-                    listFrame.Visible = false
-                    open = false
+                local inList = pos.X >= listFrame.AbsolutePosition.X and pos.X <= listFrame.AbsolutePosition.X + listFrame.AbsoluteSize.X
+                    and pos.Y >= listFrame.AbsolutePosition.Y and pos.Y <= listFrame.AbsolutePosition.Y + listFrame.AbsoluteSize.Y
+                local inArrow = pos.X >= arrowBtn.AbsolutePosition.X and pos.X <= arrowBtn.AbsolutePosition.X + arrowBtn.AbsoluteSize.X
+                    and pos.Y >= arrowBtn.AbsolutePosition.Y and pos.Y <= arrowBtn.AbsolutePosition.Y + arrowBtn.AbsoluteSize.Y
+                if not inList and not inArrow then
+                    hideDropdown()
                 end
             end
         end
-        UserInputService.InputBegan:Connect(onInputBegan)
+        UserInputService.InputBegan:Connect(onClickOutside)
 
         table.insert(tab.Components, function(newColors)
             container.BackgroundColor3 = newColors.SectionBg
             stroke.Color = newColors.SectionStroke
             lbl.TextColor3 = newColors.Label or newColors.SubText
             selLabel.TextColor3 = newColors.Text
-            arrowBtn.TextColor3 = newColors.SubText
+            arrowBtn.TextColor3 = newColors.Text
             listFrame.BackgroundColor3 = newColors.DropdownBg
         end)
         return { SetItems = function(newItems) items = newItems; buildList() end, GetValue = function() return selected end }
@@ -1245,85 +1261,58 @@ function Window:SelectTab(tab)
 end
 
 function Window:Notification(options)
-    local C = self.Colors
-    local title = options.Title or "Notification"
-    local desc = options.Description or ""
-    local dur = options.Duration or 3.5
-    local ntype = options.Type or "info"
-    local accentColor = ntype == "success" and C.Success or ntype == "danger" and C.Danger or ntype == "warning" and C.Warning or C.Accent
-
-    -- Geser notif yang sudah ada ke atas (hanya 20px)
-    local shiftAmount = 20
-    for _, existing in ipairs(self._notifQueue) do
-        if existing and existing.Frame then
-            local newY = existing.Frame.Position.Y.Offset - shiftAmount
-            Tween(existing.Frame, TweenInfo.new(0.25, Enum.EasingStyle.Quart), { Position = UDim2.new(1, -276, 0, newY) })
-        end
+    local notifData = {
+        Title = options.Title or "",
+        Description = options.Description or "",
+        Duration = options.Duration or 3,
+        Type = options.Type or "info"
+    }
+    table.insert(self._notifQueue, notifData)
+    if not self._notifBusy then
+        self:_processQueue()
     end
+end
+
+function Window:_processQueue()
+    if #self._notifQueue == 0 then
+        self._notifBusy = false
+        return
+    end
+    self._notifBusy = true
+    local data = table.remove(self._notifQueue, 1)
+    local C = self.Colors
+    local title = data.Title
+    local desc = data.Description
+    local dur = data.Duration
+    local ntype = data.Type
+    local accentColor = ntype == "success" and C.Success or ntype == "danger" and C.Danger or ntype == "warning" and C.Warning or C.Accent
 
     local notif = Create("Frame", {
         BackgroundColor3 = C.NotifBg,
         BorderSizePixel = 0,
-        Position = UDim2.new(1, 20, 1, -self._notifY),
+        Position = UDim2.new(1, 20, 1, -88),
         Size = UDim2.new(0, 260, 0, 72),
         ZIndex = 300,
         Parent = self.Gui
     })
     AddCorner(notif, 10)
     AddStroke(notif, accentColor, 1, 0.5)
-    Create("Frame", {
-        BackgroundColor3 = accentColor,
-        BorderSizePixel = 0,
-        Size = UDim2.new(0, 3, 1, 0),
-        ZIndex = 301,
-        Parent = notif
-    })
-    Create("TextLabel", {
-        BackgroundTransparency = 1, Text = title,
-        TextColor3 = C.Text, Font = Enum.Font.GothamBold, TextSize = 12,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Size = UDim2.new(1, -22, 0, 20), Position = UDim2.new(0, 14, 0, 10),
-        ZIndex = 301, Parent = notif
-    })
-    Create("TextLabel", {
-        BackgroundTransparency = 1, Text = desc,
-        TextColor3 = C.SubText, Font = Enum.Font.Gotham, TextSize = 10,
-        TextXAlignment = Enum.TextXAlignment.Left, TextWrapped = true,
-        Size = UDim2.new(1, -22, 0, 30), Position = UDim2.new(0, 14, 0, 34),
-        ZIndex = 301, Parent = notif
-    })
-    local progressBg = Create("Frame", {
-        BackgroundColor3 = C.Stroke, BorderSizePixel = 0,
-        Position = UDim2.new(0, 14, 1, -6), Size = UDim2.new(1, -28, 0, 2),
-        ZIndex = 301, Parent = notif
-    })
+    Create("Frame", { BackgroundColor3 = accentColor, BorderSizePixel = 0, Size = UDim2.new(0,3,1,0), ZIndex = 301, Parent = notif })
+    Create("TextLabel", { BackgroundTransparency = 1, Text = title, TextColor3 = C.Text, Font = Enum.Font.GothamBold, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(1,-22,0,20), Position = UDim2.new(0,14,0,10), ZIndex = 301, Parent = notif })
+    Create("TextLabel", { BackgroundTransparency = 1, Text = desc, TextColor3 = C.SubText, Font = Enum.Font.Gotham, TextSize = 10, TextXAlignment = Enum.TextXAlignment.Left, TextWrapped = true, Size = UDim2.new(1,-22,0,30), Position = UDim2.new(0,14,0,34), ZIndex = 301, Parent = notif })
+    local progressBg = Create("Frame", { BackgroundColor3 = C.Stroke, BorderSizePixel = 0, Position = UDim2.new(0,14,1,-6), Size = UDim2.new(1,-28,0,2), ZIndex = 301, Parent = notif })
     AddCorner(progressBg, 1)
-    local progressFill = Create("Frame", {
-        BackgroundColor3 = accentColor, BorderSizePixel = 0,
-        Size = UDim2.new(1, 0, 1, 0), ZIndex = 302, Parent = progressBg
-    })
+    local progressFill = Create("Frame", { BackgroundColor3 = accentColor, BorderSizePixel = 0, Size = UDim2.new(1,0,1,0), ZIndex = 302, Parent = progressBg })
     AddCorner(progressFill, 1)
-    Tween(progressFill, TweenInfo.new(dur, Enum.EasingStyle.Linear), { Size = UDim2.new(0, 0, 1, 0) })
+    Tween(progressFill, TweenInfo.new(dur, Enum.EasingStyle.Linear), { Size = UDim2.new(0,0,1,0) })
 
-    Tween(notif, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-        Position = UDim2.new(1, -276, 1, -self._notifY)
-    })
-
-    local notifData = { Frame = notif, ExpireTime = tick() + dur }
-    table.insert(self._notifQueue, notifData)
+    Tween(notif, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Position = UDim2.new(1, -276, 1, -88) })
 
     task.delay(dur, function()
-        Tween(notif, TweenInfo.new(0.35, Enum.EasingStyle.Quint), {
-            Position = UDim2.new(1, 20, 1, notif.Position.Y.Offset)
-        })
-        task.delay(0.4, function()
+        Tween(notif, TweenInfo.new(0.35, Enum.EasingStyle.Quint), { Position = UDim2.new(1, 20, 1, -88) })
+        task.delay(0.3, function()
             notif:Destroy()
-            for i, n in ipairs(self._notifQueue) do
-                if n == notifData then
-                    table.remove(self._notifQueue, i)
-                    break
-                end
-            end
+            self:_processQueue()
         end)
     end)
 end
@@ -1335,17 +1324,11 @@ function Window:ToggleMinimize()
         self._currentSize = self.Window.Size
         self._currentPos = self.Window.Position
         self.ResizeHandle.Visible = false
-        Tween(self.Window, ti, {
-            Size = UDim2.new(0, 240, 0, 54),
-            Position = UDim2.new(0, 14, 1, -72)
-        })
+        Tween(self.Window, ti, { Size = UDim2.new(0, 240, 0, 54), Position = UDim2.new(0, 14, 1, -72) })
         if self.SubtitleLabel then self.SubtitleLabel.Visible = false end
     else
         self.ResizeHandle.Visible = true
-        Tween(self.Window, ti, {
-            Size = self.DefaultSize,
-            Position = self.DefaultPos
-        })
+        Tween(self.Window, ti, { Size = self.DefaultSize, Position = self.DefaultPos })
         if self.SubtitleLabel then self.SubtitleLabel.Visible = true end
     end
 end
