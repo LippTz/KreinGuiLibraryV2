@@ -1,4 +1,4 @@
--- KreinGuiV2 Ultimate – Polished Minimize, Stacked Notif, Light fix, Theme menu
+-- KreinGuiV2 Ultimate – Dropdown fix, Notif subtle shift, Light polished, Menu Back
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -151,7 +151,7 @@ local function MakePremiumButton(parent, text, bgColor, txtColor, zIndex, callba
 end
 
 -- ============================
--- TEMA (6 tema, Light sudah diperbaiki)
+-- TEMA (Light sudah diperbaiki)
 -- ============================
 local Themes = {
     Dark = {
@@ -187,33 +187,33 @@ local Themes = {
         TrafficGreen = Color3.fromRGB(60,210,90)
     },
     Light = {
-        WindowBg = Color3.fromRGB(250,250,252),
-        TitleBar = Color3.fromRGB(242,242,247),
-        Sidebar = Color3.fromRGB(235,235,240),
+        WindowBg = Color3.fromRGB(247,247,250),
+        TitleBar = Color3.fromRGB(238,238,242),
+        Sidebar = Color3.fromRGB(230,230,238),
         SidebarDivider = Color3.fromRGB(200,200,210),
-        SidebarText = Color3.fromRGB(80,80,100),
-        SidebarHover = Color3.fromRGB(220,220,230),
-        SidebarActive = Color3.fromRGB(210,210,220),
-        SidebarActiveText = Color3.fromRGB(15,15,30),
-        Text = Color3.fromRGB(20,20,30),
-        SubText = Color3.fromRGB(100,100,120),
-        Accent = Color3.fromRGB(80,100,240),
-        Danger = Color3.fromRGB(210,50,50),
-        Success = Color3.fromRGB(30,170,80),
-        Warning = Color3.fromRGB(210,150,20),
+        SidebarText = Color3.fromRGB(50,50,70),
+        SidebarHover = Color3.fromRGB(215,215,225),
+        SidebarActive = Color3.fromRGB(200,200,215),
+        SidebarActiveText = Color3.fromRGB(10,10,25),
+        Text = Color3.fromRGB(15,15,25),
+        SubText = Color3.fromRGB(90,90,110),
+        Accent = Color3.fromRGB(70,90,230),
+        Danger = Color3.fromRGB(200,45,45),
+        Success = Color3.fromRGB(25,160,75),
+        Warning = Color3.fromRGB(200,140,15),
         SectionBg = Color3.fromRGB(255,255,255),
-        SectionStroke = Color3.fromRGB(220,220,230),
-        BtnPrimary = Color3.fromRGB(80,100,240),
-        BtnSecondary = Color3.fromRGB(230,230,240),
-        BtnDanger = Color3.fromRGB(210,50,50),
-        ToggleOff = Color3.fromRGB(195,195,210),
-        ToggleOn = Color3.fromRGB(30,170,80),
-        SliderTrack = Color3.fromRGB(210,210,225),
-        SliderFill = Color3.fromRGB(80,100,240),
-        InputBg = Color3.fromRGB(248,248,252),
+        SectionStroke = Color3.fromRGB(215,215,225),
+        BtnPrimary = Color3.fromRGB(70,90,230),
+        BtnSecondary = Color3.fromRGB(225,225,235),
+        BtnDanger = Color3.fromRGB(200,45,45),
+        ToggleOff = Color3.fromRGB(190,190,205),
+        ToggleOn = Color3.fromRGB(25,160,75),
+        SliderTrack = Color3.fromRGB(205,205,220),
+        SliderFill = Color3.fromRGB(70,90,230),
+        InputBg = Color3.fromRGB(245,245,250),
         DropdownBg = Color3.fromRGB(252,252,255),
         NotifBg = Color3.fromRGB(255,255,255),
-        Stroke = Color3.fromRGB(210,210,225),
+        Stroke = Color3.fromRGB(210,210,220),
         TrafficRed = Color3.fromRGB(255,85,75),
         TrafficYellow = Color3.fromRGB(255,190,50),
         TrafficGreen = Color3.fromRGB(50,200,85)
@@ -453,7 +453,7 @@ function Window.new(options)
     self.ActiveTab = nil
     self._updaters = {}
     self._notifQueue = {}
-    self._notifY = 88  -- starting Y offset for notifications
+    self._notifY = 88
 
     self.DefaultSize = UDim2.new(0, 760, 0, 540)
     self.DefaultPos = UDim2.new(0.5, -380, 0.5, -270)
@@ -684,7 +684,7 @@ function Window.new(options)
         Parent = self.ProfileFrame
     })
 
-    -- Profile menu (daftar tema)
+    -- Profile menu dengan submenu
     local profileMenu = Create("Frame", {
         BackgroundColor3 = self.Colors.DropdownBg,
         BorderSizePixel = 0,
@@ -702,12 +702,17 @@ function Window.new(options)
         SortOrder = Enum.SortOrder.LayoutOrder,
         Parent = profileMenu
     })
-    -- Sub-menu tema
+
     local themeNames = {"Dark", "Light", "Ocean", "Sunset", "Midnight", "Forest"}
-    for _, name in ipairs(themeNames) do
+
+    local function buildMainMenu()
+        -- hapus isi
+        for _, child in pairs(profileMenu:GetChildren()) do
+            if child:IsA("TextButton") then child:Destroy() end
+        end
         Create("TextButton", {
             BackgroundTransparency = 1,
-            Text = name,
+            Text = "Change Theme",
             TextColor3 = self.Colors.Text,
             Font = Enum.Font.Gotham,
             TextSize = 11,
@@ -715,30 +720,68 @@ function Window.new(options)
             Parent = profileMenu,
             ZIndex = 201
         }).MouseButton1Click:Connect(function()
-            profileMenu.Visible = false
-            self:SetTheme(name)
+            buildThemeMenu()
+            profileMenu.Size = UDim2.new(0, 140, 0, (#themeNames + 1) * 28 + 8)
         end)
+        Create("TextButton", {
+            BackgroundTransparency = 1,
+            Text = "Destroy GUI",
+            TextColor3 = self.Colors.Danger,
+            Font = Enum.Font.Gotham,
+            TextSize = 11,
+            Size = UDim2.new(0.9,0,0,26),
+            Parent = profileMenu,
+            ZIndex = 201
+        }).MouseButton1Click:Connect(function()
+            profileMenu.Visible = false
+            self:Destroy()
+        end)
+        profileMenu.Size = UDim2.new(0, 140, 0, 2 * 28 + 8)
     end
-    -- Add "Destroy GUI" at the bottom
-    Create("TextButton", {
-        BackgroundTransparency = 1,
-        Text = "Destroy GUI",
-        TextColor3 = self.Colors.Danger,
-        Font = Enum.Font.Gotham,
-        TextSize = 11,
-        Size = UDim2.new(0.9,0,0,26),
-        Parent = profileMenu,
-        ZIndex = 201
-    }).MouseButton1Click:Connect(function()
-        profileMenu.Visible = false
-        self:Destroy()
-    end)
+
+    local function buildThemeMenu()
+        for _, child in pairs(profileMenu:GetChildren()) do
+            if child:IsA("TextButton") then child:Destroy() end
+        end
+        -- tombol Back
+        Create("TextButton", {
+            BackgroundTransparency = 1,
+            Text = "← Back",
+            TextColor3 = self.Colors.Accent,
+            Font = Enum.Font.GothamBold,
+            TextSize = 11,
+            Size = UDim2.new(0.9,0,0,26),
+            Parent = profileMenu,
+            ZIndex = 201
+        }).MouseButton1Click:Connect(function()
+            buildMainMenu()
+            profileMenu.Size = UDim2.new(0, 140, 0, 2 * 28 + 8)
+        end)
+        for _, name in ipairs(themeNames) do
+            Create("TextButton", {
+                BackgroundTransparency = 1,
+                Text = name,
+                TextColor3 = self.Colors.Text,
+                Font = Enum.Font.Gotham,
+                TextSize = 11,
+                Size = UDim2.new(0.9,0,0,26),
+                Parent = profileMenu,
+                ZIndex = 201
+            }).MouseButton1Click:Connect(function()
+                profileMenu.Visible = false
+                self:SetTheme(name)
+            end)
+        end
+        profileMenu.Size = UDim2.new(0, 140, 0, (#themeNames + 1) * 28 + 8)
+    end
+
+    buildMainMenu()
 
     menuBtn.MouseButton1Click:Connect(function()
         if not profileMenu.Visible then
+            buildMainMenu() -- selalu mulai dari menu utama
             local absPos = menuBtn.AbsolutePosition
             profileMenu.Position = UDim2.new(0, absPos.X - 120, 0, absPos.Y - 30)
-            profileMenu.Size = UDim2.new(0, 140, 0, #themeNames * 28 + 32)
         end
         profileMenu.Visible = not profileMenu.Visible
     end)
@@ -979,13 +1022,13 @@ function Window:CreateTab(options)
         local open = false
         local function toggleDropdown()
             open = not open
-            listFrame.Visible = open
             if open then
                 local absPos = container.AbsolutePosition
                 local absSize = container.AbsoluteSize
                 listFrame.Position = UDim2.new(0, absPos.X, 0, absPos.Y + absSize.Y + 2)
                 listFrame.Size = UDim2.new(0, absSize.X, 0, math.min(#items*30+8, 180))
             end
+            listFrame.Visible = open
         end
         arrowBtn.MouseButton1Click:Connect(toggleDropdown)
 
@@ -1209,8 +1252,8 @@ function Window:Notification(options)
     local ntype = options.Type or "info"
     local accentColor = ntype == "success" and C.Success or ntype == "danger" and C.Danger or ntype == "warning" and C.Warning or C.Accent
 
-    -- Geser notif yang sudah ada ke atas
-    local shiftAmount = 80
+    -- Geser notif yang sudah ada ke atas (hanya 20px)
+    local shiftAmount = 20
     for _, existing in ipairs(self._notifQueue) do
         if existing and existing.Frame then
             local newY = existing.Frame.Position.Y.Offset - shiftAmount
@@ -1275,7 +1318,6 @@ function Window:Notification(options)
         })
         task.delay(0.4, function()
             notif:Destroy()
-            -- hapus dari queue
             for i, n in ipairs(self._notifQueue) do
                 if n == notifData then
                     table.remove(self._notifQueue, i)
@@ -1292,13 +1334,11 @@ function Window:ToggleMinimize()
     if self.Minimized then
         self._currentSize = self.Window.Size
         self._currentPos = self.Window.Position
-        -- Resize handle hilang
         self.ResizeHandle.Visible = false
         Tween(self.Window, ti, {
             Size = UDim2.new(0, 240, 0, 54),
             Position = UDim2.new(0, 14, 1, -72)
         })
-        -- sembunyikan subtitle selama minimize
         if self.SubtitleLabel then self.SubtitleLabel.Visible = false end
     else
         self.ResizeHandle.Visible = true
