@@ -1,4 +1,4 @@
--- KreinGuiV2 - macOS GUI Library for Roblox - FULLY FIXED
+-- KreinGuiV2 - macOS GUI Library for Roblox - SIDEBAR FIXED
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -35,9 +35,9 @@ local Themes = {
     Dark = {
         TitleBar = Color3.fromRGB(40,40,40),
         WindowBg = Color3.fromRGB(50,50,50),
-        Sidebar = Color3.fromRGB(35,35,35),
-        SidebarText = Color3.fromRGB(210,210,210),
-        SidebarActive = Color3.fromRGB(55,55,55),
+        Sidebar = Color3.fromRGB(42,42,42),       -- lebih kontras dari window
+        SidebarText = Color3.fromRGB(220,220,220),
+        SidebarActive = Color3.fromRGB(60,60,60),
         Text = Color3.fromRGB(240,240,240),
         SubText = Color3.fromRGB(170,170,170),
         Accent = Color3.fromRGB(0,122,255),
@@ -57,9 +57,9 @@ local Themes = {
     Light = {
         TitleBar = Color3.fromRGB(235,235,240),
         WindowBg = Color3.fromRGB(255,255,255),
-        Sidebar = Color3.fromRGB(246,246,250),
-        SidebarText = Color3.fromRGB(80,80,80),
-        SidebarActive = Color3.fromRGB(230,230,235),
+        Sidebar = Color3.fromRGB(240,240,245),
+        SidebarText = Color3.fromRGB(60,60,60),
+        SidebarActive = Color3.fromRGB(225,225,230),
         Text = Color3.fromRGB(30,30,30),
         SubText = Color3.fromRGB(100,100,100),
         Accent = Color3.fromRGB(0,122,255),
@@ -81,7 +81,6 @@ local Themes = {
 local Library = {}
 Library.Windows = {}
 
--- Window class
 local Window = {}
 Window.__index = Window
 
@@ -146,7 +145,8 @@ function Window.new(options)
         BackgroundColor3 = self.Colors.TitleBar,
         Size = UDim2.new(1, 0, 0, 54),
         BorderSizePixel = 0,
-        Parent = self.Window
+        Parent = self.Window,
+        ZIndex = 10
     })
     Create("UICorner", { CornerRadius = UDim.new(10, 0), Parent = self.TitleBar })
 
@@ -158,7 +158,8 @@ function Window.new(options)
             Position = UDim2.new(0, x, 0.5, -7),
             Text = "",
             BorderSizePixel = 0,
-            Parent = self.TitleBar
+            Parent = self.TitleBar,
+            ZIndex = 11
         })
         Create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = btn })
         btn.MouseEnter:Connect(function() btn.Text = icon end)
@@ -170,7 +171,6 @@ function Window.new(options)
     trafficBtn(Color3.fromRGB(255,189,46), 32, Icons.minimize, function() self:ToggleMinimize() end)
     trafficBtn(Color3.fromRGB(40,200,70), 52, Icons.maximize, function() self:ToggleMaximize() end)
 
-    -- Title text
     local titleFrame = Create("Frame", {
         BackgroundTransparency = 1,
         Size = UDim2.new(1, -120, 1, 0),
@@ -212,15 +212,17 @@ function Window.new(options)
         })
     end
 
-    -- Sidebar
+    -- SIDEBAR (diberi ZIndex tinggi, jelas terlihat)
     self.Sidebar = Create("Frame", {
         BackgroundColor3 = self.Colors.Sidebar,
         BorderSizePixel = 0,
         Size = UDim2.new(0, 180, 1, -54),
         Position = UDim2.new(0, 0, 0, 54),
-        Parent = self.Window
+        Parent = self.Window,
+        ZIndex = 5        -- penting: di atas Content
     })
     Stroke(self.Sidebar, self.Colors.Stroke, 1)
+    -- Garis pemisah kanan
     Create("Frame", {
         BackgroundColor3 = self.Colors.Stroke,
         Size = UDim2.new(0, 1, 1, 0),
@@ -230,7 +232,7 @@ function Window.new(options)
     })
 
     self.SidebarList = Create("UIListLayout", {
-        Padding = UDim.new(0, 6),
+        Padding = UDim.new(0, 8),
         FillDirection = Enum.FillDirection.Vertical,
         HorizontalAlignment = Enum.HorizontalAlignment.Center,
         VerticalAlignment = Enum.VerticalAlignment.Top,
@@ -239,23 +241,23 @@ function Window.new(options)
     })
     Create("Frame", {
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 10),
+        Size = UDim2.new(1, 0, 0, 12),
         Parent = self.Sidebar
     })
 
-    -- Content area
+    -- CONTENT (diberi ZIndex lebih rendah dari sidebar)
     self.Content = Create("Frame", {
         BackgroundTransparency = 1,
         Size = UDim2.new(1, -184, 1, -62),
         Position = UDim2.new(0, 184, 0, 60),
         ClipsDescendants = true,
-        Parent = self.Window
+        Parent = self.Window,
+        ZIndex = 1
     })
 
-    -- Drag
     MakeDraggable(self.TitleBar, self.Window)
 
-    -- Animasi masuk
+    -- Animasi
     self.Window.Size = UDim2.new(0, 720, 0, 0)
     Tween(self.Window, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 720, 0, 520)
@@ -269,9 +271,8 @@ function Window:CreateTab(options)
     local tab = {}
     tab.Title = options.Title or "Tab"
     tab.Icon = options.Icon or Icons.home
-    tab.Window = self -- simpan window referensi
+    tab.Window = self
 
-    -- Konten
     tab.Content = Create("Frame", {
         BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 1, 0),
@@ -301,7 +302,7 @@ function Window:CreateTab(options)
         Parent = tab.Scroll
     })
 
-    -- Tombol sidebar
+    -- Tombol tab di sidebar
     tab.Btn = Create("TextButton", {
         BackgroundTransparency = 1,
         BackgroundColor3 = self.Colors.SidebarActive,
@@ -360,7 +361,7 @@ function Window:CreateTab(options)
         local lbl = Create("TextLabel", {
             BackgroundTransparency = 1,
             Text = title,
-            TextColor3 = self.Colors.Text, -- use window's Colors
+            TextColor3 = self.Colors.Text,
             Font = Enum.Font.Gotham,
             TextSize = 13,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -376,7 +377,7 @@ function Window:CreateTab(options)
         return row, lbl, right
     end
 
-    -- ===== KOMPONEN =====
+    -- Komponen – perhatikan semua pakai self.Window.Colors
     function tab:CreateSection(title)
         local section = {}
         section.Bg = Create("Frame", {
@@ -693,7 +694,6 @@ function Window:CreateTab(options)
             callback(color)
         end
 
-        -- Hue bar
         local hueBar = Create("Frame", {
             BackgroundTransparency = 1,
             Size = UDim2.new(0.85, 0, 0, 12),
@@ -735,7 +735,6 @@ function Window:CreateTab(options)
             end
         end)
 
-        -- Sat/Val sliders
         local svFrame = Create("Frame", {
             BackgroundTransparency = 1,
             Size = UDim2.new(0.85, 0, 0, 30),
@@ -844,7 +843,7 @@ function Window:Notification(options)
         Position = UDim2.new(1, 20, 1, -80),
         Size = UDim2.new(0, 240, 0, 60),
         Parent = self.Gui,
-        ZIndex = 5
+        ZIndex = 20
     })
     Create("UICorner", { CornerRadius = UDim.new(0, 10), Parent = notif })
     Stroke(notif, self.Colors.Stroke, 1)
