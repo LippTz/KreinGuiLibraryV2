@@ -1,5 +1,6 @@
 -- KreinGuiV2 - Premium macOS-style GUI Library for Roblox
--- Redesigned with fixed sidebar/tab system + premium visuals
+-- FIXED: Removed invalid LetterSpacing property
+-- UPGRADED: Premium button visuals with gradient, shine, glow effects
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -61,6 +62,155 @@ local function AddShadow(parent, size, transparency)
         Parent              = parent
     })
     return shadow
+end
+
+-- ══════════════════════════════════════════
+--  PREMIUM BUTTON FACTORY
+--  Creates a macOS-style button with:
+--    • UIGradient for depth/gloss
+--    • Shine overlay layer
+--    • Glow ImageLabel beneath
+--    • Smooth multi-stage tween on hover/press
+-- ══════════════════════════════════════════
+
+local function MakePremiumButton(parent, text, bgColor, txtColor, zIndex, callback, style)
+    style = style or "primary"
+
+    -- Outer glow frame (sits behind the button)
+    local glowFrame = Create("Frame", {
+        BackgroundColor3     = bgColor,
+        BackgroundTransparency = 0.75,
+        BorderSizePixel      = 0,
+        Size                 = UDim2.new(0.96, 0, 0, 46),  -- slightly larger than button
+        ZIndex               = zIndex - 1,
+        Parent               = parent
+    })
+    AddCorner(glowFrame, 12)
+
+    -- Main button frame (we use a Frame + TextButton layered for gradient control)
+    local btnFrame = Create("Frame", {
+        BackgroundColor3 = bgColor,
+        BorderSizePixel  = 0,
+        Size             = UDim2.new(1, 0, 1, 0),
+        ZIndex           = zIndex,
+        Parent           = glowFrame
+    })
+    AddCorner(btnFrame, 11)
+
+    -- UIGradient: top is slightly lighter (gloss), bottom darker (depth)
+    -- This simulates the "pill of light" you see on macOS buttons
+    local gradient = Create("UIGradient", {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0,   Color3.fromRGB(255, 255, 255)),  -- highlight
+            ColorSequenceKeypoint.new(0.45, Color3.fromRGB(200, 200, 200)), -- mid
+            ColorSequenceKeypoint.new(1,   Color3.fromRGB(130, 130, 130))   -- shadow
+        }),
+        Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0,   0.72),  -- subtle top highlight
+            NumberSequenceKeypoint.new(0.5, 0.92),  -- fade to near invisible
+            NumberSequenceKeypoint.new(1,   0.78)   -- subtle bottom shadow
+        }),
+        Rotation = 90,  -- vertical gradient = top-to-bottom gloss
+        Parent   = btnFrame
+    })
+
+    -- Shine streak: diagonal highlight strip across top-left area
+    local shineLabel = Create("Frame", {
+        BackgroundColor3     = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = 0.82,
+        BorderSizePixel      = 0,
+        Position             = UDim2.new(0, 0, 0, 0),
+        Size                 = UDim2.new(1, 0, 0.45, 0),  -- covers top 45% of button
+        ZIndex               = zIndex + 1,
+        ClipsDescendants     = false,
+        Parent               = btnFrame
+    })
+    AddCorner(shineLabel, 10)
+
+    -- Shine's own gradient fades it out toward the bottom
+    Create("UIGradient", {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255,255,255))
+        }),
+        Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0,   0.55),  -- visible at top
+            NumberSequenceKeypoint.new(1,   1.0)    -- fully invisible at bottom
+        }),
+        Rotation = 90,
+        Parent   = shineLabel
+    })
+
+    -- The actual clickable TextButton (transparent bg, sits on top)
+    local btn = Create("TextButton", {
+        BackgroundTransparency = 1,
+        BorderSizePixel        = 0,
+        Text                   = text,
+        TextColor3             = txtColor,
+        Font                   = Enum.Font.GothamBold,
+        TextSize               = 13,
+        Size                   = UDim2.new(1, 0, 1, 0),
+        ZIndex                 = zIndex + 2,
+        AutoButtonColor        = false,
+        Parent                 = btnFrame
+    })
+
+    -- Add a subtle text shadow by duplicating label slightly offset
+    local textShadow = Create("TextLabel", {
+        BackgroundTransparency = 1,
+        Text                   = text,
+        TextColor3             = Color3.fromRGB(0, 0, 0),
+        TextTransparency       = 0.7,
+        Font                   = Enum.Font.GothamBold,
+        TextSize               = 13,
+        Size                   = UDim2.new(1, 0, 1, 0),
+        Position               = UDim2.new(0, 0, 0, 1),  -- 1px down = shadow
+        ZIndex                 = zIndex + 1,
+        Parent                 = btnFrame
+    })
+
+    -- Stroke border: color matches button with slight transparency for "inset" look
+    local stroke = AddStroke(btnFrame, bgColor:Lerp(Color3.new(1,1,1), 0.45), 1.5, 0.3)
+
+    -- ── Tween constants ──
+    local tiHover = TweenInfo.new(0.18, Enum.EasingStyle.Quart)
+    local tiPress = TweenInfo.new(0.08, Enum.EasingStyle.Quart)
+    local tiRelease = TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+    local colorHover = bgColor:Lerp(Color3.new(1,1,1), 0.14)
+    local colorPress = bgColor:Lerp(Color3.new(0,0,0), 0.1)
+
+    -- Hover: lighten + expand glow
+    btn.MouseEnter:Connect(function()
+        Tween(btnFrame, tiHover, { BackgroundColor3 = colorHover })
+        Tween(glowFrame, tiHover, { BackgroundTransparency = 0.6, BackgroundColor3 = colorHover })
+        Tween(shineLabel, tiHover, { BackgroundTransparency = 0.72 }) -- shine brightens slightly
+    end)
+    btn.MouseLeave:Connect(function()
+        Tween(btnFrame, tiRelease, { BackgroundColor3 = bgColor })
+        Tween(glowFrame, tiRelease, { BackgroundTransparency = 0.75, BackgroundColor3 = bgColor })
+        Tween(shineLabel, tiRelease, { BackgroundTransparency = 0.82 })
+    end)
+
+    -- Press: darken + compress glow (tactile feel)
+    btn.MouseButton1Down:Connect(function()
+        Tween(btnFrame, tiPress, { BackgroundColor3 = colorPress })
+        Tween(glowFrame, tiPress, {
+            BackgroundTransparency = 0.88,
+            Size = UDim2.new(0.94, 0, 0, 44) -- slightly smaller = "pressed in"
+        })
+    end)
+    btn.MouseButton1Up:Connect(function()
+        Tween(btnFrame, tiRelease, { BackgroundColor3 = bgColor })
+        Tween(glowFrame, tiRelease, {
+            BackgroundTransparency = 0.75,
+            Size = UDim2.new(0.96, 0, 0, 46)
+        })
+    end)
+    btn.MouseButton1Click:Connect(callback or function() end)
+
+    -- Return the outer frame so layout system can size it
+    return glowFrame, btn
 end
 
 -- ══════════════════════════════════════════
@@ -210,7 +360,6 @@ function Window.new(options)
     self.Minimized = false
     self.Maximized = false
 
-    -- Screen GUI
     local parent = pcall(function() return syn.protect_gui end) and CoreGui
         or (game:GetService("RunService"):IsStudio() and game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
         or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
@@ -245,9 +394,7 @@ function Window.new(options)
         ZIndex           = 10,
         Parent           = self.Window
     })
-    -- Rounded only on top
     Create("UICorner", { CornerRadius = UDim.new(0, 14), Parent = self.TitleBar })
-    -- Bottom filler to hide bottom radius
     Create("Frame", {
         BackgroundColor3 = self.Colors.TitleBar,
         BorderSizePixel  = 0,
@@ -256,7 +403,6 @@ function Window.new(options)
         ZIndex           = 10,
         Parent           = self.TitleBar
     })
-    -- Title bar bottom divider
     Create("Frame", {
         BackgroundColor3 = self.Colors.TitleStroke,
         BorderSizePixel  = 0,
@@ -299,7 +445,7 @@ function Window.new(options)
     TrafficLight(self.Colors.TrafficGreen,  54, "+", function() self:ToggleMaximize() end)
 
     -- Icon + Title
-    local titleIcon = Create("TextLabel", {
+    Create("TextLabel", {
         BackgroundTransparency = 1,
         Text       = self.Icon,
         TextColor3 = self.Colors.Accent,
@@ -310,7 +456,7 @@ function Window.new(options)
         ZIndex     = 11,
         Parent     = self.TitleBar
     })
-    local titleLabel = Create("TextLabel", {
+    Create("TextLabel", {
         BackgroundTransparency = 1,
         Text              = self.Title,
         TextColor3        = self.Colors.Text,
@@ -340,7 +486,6 @@ function Window.new(options)
     MakeDraggable(self.TitleBar, self.Window)
 
     -- ── SIDEBAR ──
-    -- Fixed: sidebar positioned BELOW title bar, uses ScrollingFrame + proper layout
     self.Sidebar = Create("Frame", {
         BackgroundColor3 = self.Colors.Sidebar,
         BorderSizePixel  = 0,
@@ -349,8 +494,6 @@ function Window.new(options)
         ZIndex           = 6,
         Parent           = self.Window
     })
-
-    -- Sidebar right divider
     Create("Frame", {
         BackgroundColor3 = self.Colors.SidebarDivider,
         BorderSizePixel  = 0,
@@ -360,7 +503,6 @@ function Window.new(options)
         Parent           = self.Sidebar
     })
 
-    -- Sidebar logo strip at top
     local sidebarHeader = Create("Frame", {
         BackgroundTransparency = 1,
         BorderSizePixel        = 0,
@@ -378,7 +520,6 @@ function Window.new(options)
         Parent           = sidebarHeader
     })
 
-    -- Sidebar scrolling tab list
     self.SidebarScroll = Create("ScrollingFrame", {
         BackgroundTransparency  = 1,
         BorderSizePixel         = 0,
@@ -393,7 +534,6 @@ function Window.new(options)
         Parent                  = self.Sidebar
     })
 
-    -- Layout for tab buttons inside SidebarScroll
     self.SidebarLayout = Create("UIListLayout", {
         Padding               = UDim.new(0, 4),
         FillDirection         = Enum.FillDirection.Vertical,
@@ -411,7 +551,6 @@ function Window.new(options)
     })
 
     -- ── CONTENT AREA ──
-    -- Fixed: starts right after sidebar (195px), below title bar (52px)
     self.ContentArea = Create("Frame", {
         BackgroundTransparency = 1,
         BorderSizePixel        = 0,
@@ -469,7 +608,7 @@ function Window:CreateTab(options)
         Parent                 = tab.Frame
     })
 
-    local scrollLayout = Create("UIListLayout", {
+    Create("UIListLayout", {
         Padding             = UDim.new(0, 10),
         FillDirection       = Enum.FillDirection.Vertical,
         HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -485,7 +624,6 @@ function Window:CreateTab(options)
     })
 
     -- ── Sidebar Button ──
-    -- FIXED: parent is SidebarScroll (not Sidebar directly)
     local tabIndex = #self.Tabs + 1
     tab.SideBtn = Create("TextButton", {
         BackgroundColor3    = Color3.fromRGB(0,0,0),
@@ -500,7 +638,6 @@ function Window:CreateTab(options)
     })
     AddCorner(tab.SideBtn, 9)
 
-    -- Active indicator bar
     tab.Indicator = Create("Frame", {
         BackgroundColor3 = C.Accent,
         BorderSizePixel  = 0,
@@ -512,7 +649,6 @@ function Window:CreateTab(options)
     })
     AddCorner(tab.Indicator, 3)
 
-    -- Icon label
     tab.IconLabel = Create("TextLabel", {
         BackgroundTransparency = 1,
         Text       = tab.Icon,
@@ -525,7 +661,6 @@ function Window:CreateTab(options)
         Parent     = tab.SideBtn
     })
 
-    -- Title label
     tab.TitleLabel = Create("TextLabel", {
         BackgroundTransparency = 1,
         Text           = tab.Title,
@@ -539,7 +674,6 @@ function Window:CreateTab(options)
         Parent         = tab.SideBtn
     })
 
-    -- Hover effect
     local hoverTween = TweenInfo.new(0.18)
     tab.SideBtn.MouseEnter:Connect(function()
         if self.ActiveTab ~= tab then
@@ -605,7 +739,6 @@ function Window:CreateTab(options)
         AddCorner(section.Frame, 10)
         AddStroke(section.Frame, C.SectionStroke, 1, 0.4)
 
-        -- Section header
         local header = Create("Frame", {
             BackgroundTransparency = 1,
             BorderSizePixel        = 0,
@@ -613,20 +746,21 @@ function Window:CreateTab(options)
             ZIndex                 = 5,
             Parent                 = section.Frame
         })
+
+        -- FIXED: Removed LetterSpacing (not valid in Roblox TextLabel)
         Create("TextLabel", {
             BackgroundTransparency = 1,
             Text           = title:upper(),
             TextColor3     = C.SubText,
             Font           = Enum.Font.GothamBold,
             TextSize       = 9,
-            LetterSpacing  = 0,
+            -- LetterSpacing removed: this property does not exist in Roblox
             TextXAlignment = Enum.TextXAlignment.Left,
             Size           = UDim2.new(1, -20, 1, 0),
             Position       = UDim2.new(0, 12, 0, 0),
             ZIndex         = 5,
             Parent         = header
         })
-        -- Divider under header
         Create("Frame", {
             BackgroundColor3 = C.SectionStroke,
             BorderSizePixel  = 0,
@@ -655,7 +789,6 @@ function Window:CreateTab(options)
             section.Frame.Size = UDim2.new(0.96, 0, 0, section.List.AbsoluteContentSize.Y + 46)
         end)
 
-        -- Helper: add row INTO section
         function section:AddRow(title2, height2)
             local row2 = Create("Frame", {
                 BackgroundTransparency = 1,
@@ -690,43 +823,35 @@ function Window:CreateTab(options)
         return section
     end
 
-    -- ── CREATE BUTTON ──
+    -- ── CREATE BUTTON (PREMIUM VERSION) ──
+    --
+    -- Instead of a plain TextButton, we use MakePremiumButton which adds:
+    --   1. UIGradient gloss layer on the button face
+    --   2. Shine strip (semi-transparent white Frame) over the top half
+    --   3. Outer glow frame that pulses on hover
+    --   4. Text shadow for depth
+    --   5. Multi-stage tweens: hover → lighten+glow, press → darken+shrink, release → restore
+    --
     function tab:CreateButton(text, callback, style)
         style = style or "primary"
-        local bgColor = style == "danger"    and C.BtnDanger
-                     or style == "secondary" and C.BtnSecondary
-                     or C.BtnPrimary
-        local txtColor = (style == "secondary") and C.Text or Color3.fromRGB(255,255,255)
+        local bgColor  = style == "danger"    and C.BtnDanger
+                      or style == "secondary" and C.BtnSecondary
+                      or C.BtnPrimary
+        local txtColor = (style == "secondary") and C.Text or Color3.fromRGB(255, 255, 255)
 
-        local btn = Create("TextButton", {
-            BackgroundColor3 = bgColor,
-            BorderSizePixel  = 0,
-            Text             = text,
-            TextColor3       = txtColor,
-            Font             = Enum.Font.GothamBold,
-            TextSize         = 12,
-            Size             = UDim2.new(0.96, 0, 0, 38),
-            ZIndex           = 4,
-            AutoButtonColor  = false,
-            Parent           = tab.Scroll
-        })
-        AddCorner(btn, 9)
-        AddStroke(btn, bgColor:Lerp(Color3.new(1,1,1), 0.3), 1, 0.6)
+        -- MakePremiumButton parents its outer glow frame to tab.Scroll
+        -- and returns (glowFrame, clickableBtn)
+        local glowFrame, btn = MakePremiumButton(
+            tab.Scroll,    -- parent
+            text,          -- button text
+            bgColor,       -- base background color
+            txtColor,      -- text color
+            4,             -- base ZIndex
+            callback,      -- click callback
+            style          -- style hint (unused inside but passed for future use)
+        )
 
-        btn.MouseEnter:Connect(function()
-            Tween(btn, TweenInfo.new(0.15), { BackgroundColor3 = bgColor:Lerp(Color3.new(1,1,1), 0.12) })
-        end)
-        btn.MouseLeave:Connect(function()
-            Tween(btn, TweenInfo.new(0.15), { BackgroundColor3 = bgColor })
-        end)
-        btn.MouseButton1Down:Connect(function()
-            Tween(btn, TweenInfo.new(0.08), { BackgroundColor3 = bgColor:Lerp(Color3.new(0,0,0), 0.12) })
-        end)
-        btn.MouseButton1Up:Connect(function()
-            Tween(btn, TweenInfo.new(0.15), { BackgroundColor3 = bgColor })
-        end)
-        btn.MouseButton1Click:Connect(callback or function() end)
-        return btn
+        return btn  -- expose the TextButton for any further manipulation
     end
 
     -- ── CREATE TOGGLE ──
@@ -910,7 +1035,6 @@ function Window:CreateTab(options)
         local items    = options.Items    or {}
         local selected = options.Default  or (items[1] or "Select...")
         local callback = options.Callback or function() end
-        local multi    = options.Multi    or false
 
         local container = Create("Frame", {
             BackgroundColor3 = C.SectionBg,
@@ -962,7 +1086,6 @@ function Window:CreateTab(options)
             Parent     = container
         })
 
-        -- Dropdown list
         local listFrame = Create("Frame", {
             BackgroundColor3 = C.DropdownBg,
             BorderSizePixel  = 0,
@@ -976,7 +1099,7 @@ function Window:CreateTab(options)
         AddCorner(listFrame, 9)
         AddStroke(listFrame, C.SectionStroke, 1, 0.4)
 
-        local listLayout = Create("UIListLayout", {
+        Create("UIListLayout", {
             Padding             = UDim.new(0, 2),
             FillDirection       = Enum.FillDirection.Vertical,
             HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -1016,7 +1139,6 @@ function Window:CreateTab(options)
                     selected = item
                     selLabel.Text = item
                     listFrame.Visible = false
-                    Tween(arrowBtn, TweenInfo.new(0.2), {})
                     callback(item)
                 end)
             end
@@ -1223,7 +1345,6 @@ function Window:CreateTab(options)
             callback(color)
         end
 
-        -- Hue bar
         local hueTrack = Create("ImageLabel", {
             Image           = "rbxassetid://9607867758",
             BackgroundColor3 = Color3.fromRGB(255,255,255),
@@ -1293,21 +1414,7 @@ function Window:CreateTab(options)
         local satTr, satFl, satKn = makeMini(70, s, "S")
         local valTr, valFl, valKn = makeMini(86, v, "V")
 
-        -- Drag helpers
         local draggingHue, draggingSat, draggingVal = false,false,false
-
-        local function connectDrag(track2, knob2, fillF, setter)
-            track2.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or
-                   input.UserInputType == Enum.UserInputType.Touch then
-                    setter(true)
-                    local p = math.clamp((input.Position.X - track2.AbsolutePosition.X)/track2.AbsoluteSize.X,0,1)
-                    knob2.Position = UDim2.new(p,0,0.5,0)
-                    fillF.Size = UDim2.new(p,0,1,0)
-                    return p
-                end
-            end)
-        end
 
         hueTrack.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or
@@ -1426,7 +1533,6 @@ function Window:CreateTab(options)
         end
     end
 
-    -- Register tab
     self.Tabs[#self.Tabs + 1] = tab
     if not self.ActiveTab then
         self:SelectTab(tab)
@@ -1487,7 +1593,6 @@ function Window:Notification(options)
     AddStroke(notif, accentColor, 1, 0.5)
     AddShadow(notif, 30, 0.5)
 
-    -- Accent side bar
     Create("Frame", {
         BackgroundColor3 = accentColor,
         BorderSizePixel  = 0,
@@ -1496,7 +1601,6 @@ function Window:Notification(options)
         ZIndex           = 101,
         Parent           = notif
     })
-    AddCorner(notif:FindFirstChildWhichIsA("Frame"), 10)
 
     Create("TextLabel", {
         BackgroundTransparency = 1,
@@ -1524,7 +1628,6 @@ function Window:Notification(options)
         Parent         = notif
     })
 
-    -- Progress bar
     local progressBg = Create("Frame", {
         BackgroundColor3 = C.Stroke,
         BorderSizePixel  = 0,
@@ -1544,7 +1647,6 @@ function Window:Notification(options)
     AddCorner(progressFill, 1)
     Tween(progressFill, TweenInfo.new(dur, Enum.EasingStyle.Linear), { Size = UDim2.new(0, 0, 1, 0) })
 
-    -- Slide in
     Tween(notif, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
         Position = UDim2.new(1, -276, 1, -88)
     })
@@ -1591,7 +1693,6 @@ function Window:ToggleMaximize()
 end
 
 function Window:SetTheme(themeName)
-    -- Basic theme switching (rebuilds color references)
     if Themes[themeName] then
         self.Theme  = themeName
         self.Colors = Themes[themeName]
