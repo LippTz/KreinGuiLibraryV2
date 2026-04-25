@@ -1565,10 +1565,11 @@ function Window:CreateTab(options)
                 ZIndex         = 4,
                 Parent         = sep,
             })
-            RegisterColor(self._themeRegistry, sepTxt, "TextColor3", "SubText")
+            -- FIXED: self._themeRegistry → self.Window._themeRegistry
+            RegisterColor(self.Window._themeRegistry, sepTxt, "TextColor3", "SubText")
         end
         local sepLine1 = Create("Frame", {
-            BackgroundColor3 = C.Stroke,  -- FIXED: was self.Colors.Stroke
+            BackgroundColor3 = C.Stroke,
             BorderSizePixel  = 0,
             AnchorPoint      = Vector2.new(0, 0.5),
             Position         = UDim2.new(0, 0, 0.5, 0),
@@ -1576,10 +1577,11 @@ function Window:CreateTab(options)
             ZIndex           = 4,
             Parent           = sep,
         })
-        RegisterColor(self._themeRegistry, sepLine1, "BackgroundColor3", "Stroke")
+        -- FIXED: self._themeRegistry → self.Window._themeRegistry
+        RegisterColor(self.Window._themeRegistry, sepLine1, "BackgroundColor3", "Stroke")
         if hasLabel then
             local sepLine2 = Create("Frame", {
-                BackgroundColor3 = C.Stroke,  -- FIXED: was self.Colors.Stroke
+                BackgroundColor3 = C.Stroke,
                 BorderSizePixel  = 0,
                 AnchorPoint      = Vector2.new(0, 0.5),
                 Position         = UDim2.new(0.67, 4, 0.5, 0),
@@ -1587,7 +1589,8 @@ function Window:CreateTab(options)
                 ZIndex           = 4,
                 Parent           = sep,
             })
-            RegisterColor(self._themeRegistry, sepLine2, "BackgroundColor3", "Stroke")
+            -- FIXED: self._themeRegistry → self.Window._themeRegistry
+            RegisterColor(self.Window._themeRegistry, sepLine2, "BackgroundColor3", "Stroke")
         end
     end
 
