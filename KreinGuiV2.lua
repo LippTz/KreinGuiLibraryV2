@@ -1543,7 +1543,7 @@ function Window:CreateTab(options)
         }
     end
 
-    -- ── SEPARATOR ──
+-- ── SEPARATOR ──
     function tab:CreateSeparator(label)
         local sep = Create("Frame", {
             BackgroundTransparency = 1,
@@ -1556,7 +1556,7 @@ function Window:CreateTab(options)
             local sepTxt = Create("TextLabel", {
                 BackgroundTransparency = 1,
                 Text           = label,
-                TextColor3     = self.Colors.SubText,
+                TextColor3     = C.SubText,
                 Font           = Enum.Font.GothamBold,
                 TextSize       = 9,
                 TextXAlignment = Enum.TextXAlignment.Center,
@@ -1568,7 +1568,7 @@ function Window:CreateTab(options)
             RegisterColor(self._themeRegistry, sepTxt, "TextColor3", "SubText")
         end
         local sepLine1 = Create("Frame", {
-            BackgroundColor3 = self.Colors.Stroke,
+            BackgroundColor3 = C.Stroke,  -- FIXED: was self.Colors.Stroke
             BorderSizePixel  = 0,
             AnchorPoint      = Vector2.new(0, 0.5),
             Position         = UDim2.new(0, 0, 0.5, 0),
@@ -1579,7 +1579,7 @@ function Window:CreateTab(options)
         RegisterColor(self._themeRegistry, sepLine1, "BackgroundColor3", "Stroke")
         if hasLabel then
             local sepLine2 = Create("Frame", {
-                BackgroundColor3 = self.Colors.Stroke,
+                BackgroundColor3 = C.Stroke,  -- FIXED: was self.Colors.Stroke
                 BorderSizePixel  = 0,
                 AnchorPoint      = Vector2.new(0, 0.5),
                 Position         = UDim2.new(0.67, 4, 0.5, 0),
