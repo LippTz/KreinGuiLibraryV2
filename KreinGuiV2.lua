@@ -1,6 +1,5 @@
--- macOS GUI Library for Roblox
--- KreinGuiV2
-
+-- macOS GUI Library for Roblox (Fixed - Mobile & PC Support)
+-- Fixes: tab content not showing, drag not working, touch support
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -84,6 +83,42 @@ Library.Windows = {}
 local Window = {}
 Window.__index = Window
 
+-- Universal drag function (mouse + touch)
+local function MakeDraggable(handle, windowFrame)
+    local dragging = false
+    local startInputPos, startWindowPos
+
+    local function beginDrag(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            startInputPos = input.Position
+            startWindowPos = windowFrame.Position
+        end
+    end
+
+    local function endDrag(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end
+
+    local function moveDrag(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - startInputPos
+            windowFrame.Position = UDim2.new(
+                startWindowPos.X.Scale,
+                startWindowPos.X.Offset + delta.X,
+                startWindowPos.Y.Scale,
+                startWindowPos.Y.Offset + delta.Y
+            )
+        end
+    end
+
+    handle.InputBegan:Connect(beginDrag)
+    handle.InputEnded:Connect(endDrag)
+    UserInputService.InputChanged:Connect(moveDrag)
+end
+
 function Window.new(options)
     local self = setmetatable({}, Window)
     self.Title = options.Title or "Window"
@@ -95,18 +130,20 @@ function Window.new(options)
     self.ActiveTab = nil
 
     local parent = (syn and syn.protect_gui and CoreGui) or game.Players.LocalPlayer:FindFirstChild("PlayerGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    self.ScreenGui = Utility.Create("ScreenGui", { Name = "macOS_GUI", Parent = parent })
+    self.ScreenGui = Utility.Create("ScreenGui", { Name = "macOS_GUI", Parent = parent, ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
 
+    -- Blur background (tidak menghalangi interaksi)
     self.BlurFrame = Utility.Create("Frame", {
         BackgroundTransparency = 0.5, BackgroundColor3 = Color3.fromRGB(0,0,0),
-        Size = UDim2.new(1,0,1,0), Parent = self.ScreenGui
+        Size = UDim2.new(1,0,1,0), Parent = self.ScreenGui, ZIndex = 1
     })
     Utility.AddBlur(self.BlurFrame, 15)
 
+    -- Window utama
     self.WindowFrame = Utility.Create("Frame", {
         BackgroundColor3 = self.Colors.WindowBackground, BorderSizePixel = 0,
         Position = UDim2.new(0.5, -300, 0.5, -200), Size = UDim2.new(0,600,0,400),
-        ClipsDescendants = true, Parent = self.ScreenGui
+        ClipsDescendants = true, Parent = self.ScreenGui, ZIndex = 2
     })
     Utility.Create("UICorner", { CornerRadius = UDim.new(0,12), Parent = self.WindowFrame })
     Utility.ApplyStroke(self.WindowFrame, self.Colors.Stroke, 1)
@@ -114,7 +151,7 @@ function Window.new(options)
     -- Title bar
     self.TitleBar = Utility.Create("Frame", {
         BackgroundColor3 = self.Colors.TitleBar, Size = UDim2.new(1,0,0,40),
-        BorderSizePixel = 0, Parent = self.WindowFrame
+        BorderSizePixel = 0, Parent = self.WindowFrame, ZIndex = 3
     })
     Utility.Create("UICorner", { CornerRadius = UDim.new(12,0), Parent = self.TitleBar })
 
@@ -122,7 +159,7 @@ function Window.new(options)
         local btn = Utility.Create("TextButton", {
             BackgroundColor3 = color, Size = UDim2.new(0,12,0,12),
             Position = UDim2.new(0,pos,0.5,-6), Text = "", BorderSizePixel = 0,
-            Parent = self.TitleBar
+            Parent = self.TitleBar, ZIndex = 4
         })
         Utility.Create("UICorner", { CornerRadius = UDim.new(1,0), Parent = btn })
         btn.MouseEnter:Connect(function() btn.Text = icon end)
@@ -157,37 +194,27 @@ function Window.new(options)
         })
     end
 
+    -- Tab container
     self.TabContainer = Utility.Create("Frame", {
         BackgroundTransparency = 1, Size = UDim2.new(1,-20,0,32),
         Position = UDim2.new(0,10,0,46), Parent = self.WindowFrame
     })
-    Utility.Create("UIListLayout", {
+    local tabListLayout = Utility.Create("UIListLayout", {
         FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Left,
         VerticalAlignment = Enum.VerticalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder,
         Padding = UDim.new(0,4), Parent = self.TabContainer
     })
 
+    -- Content area
     self.ContentFrame = Utility.Create("Frame", {
         BackgroundTransparency = 1, Size = UDim2.new(1,-20,1,-88),
         Position = UDim2.new(0,10,0,82), ClipsDescendants = true, Parent = self.WindowFrame
     })
 
-    -- Drag
-    local dragging, startPos, dragStart
-    self.TitleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true; startPos = self.WindowFrame.Position; dragStart = input.Position
-            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
-        end
-    end)
-    self.TitleBar.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            self.WindowFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
+    -- Drag universal (mouse + touch)
+    MakeDraggable(self.TitleBar, self.WindowFrame)
 
-    -- Entrance animation
+    -- Animasi masuk
     self.WindowFrame.Size = UDim2.new(0,600,0,0)
     Utility.Tween(self.WindowFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0,600,0,400) })
 
@@ -201,9 +228,14 @@ function Window:CreateTab(options)
         BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), Visible = false,
         Parent = self.ContentFrame
     })
+    -- ScrollingFrame dengan AutomaticCanvasSize agar konten muncul
     tab.ScrollingFrame = Utility.Create("ScrollingFrame", {
-        BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), CanvasSize = UDim2.new(0,0,0,0),
-        ScrollBarThickness = 3, ScrollBarImageColor3 = self.Colors.Accent, Parent = tab.Content
+        BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0),
+        CanvasSize = UDim2.new(0,0,0,0),
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,  -- FIX: konten akan tampil
+        ScrollBarThickness = 3,
+        ScrollBarImageColor3 = self.Colors.Accent,
+        Parent = tab.Content
     })
     Utility.Create("UIListLayout", {
         Padding = UDim.new(0,8), FillDirection = Enum.FillDirection.Vertical,
@@ -211,6 +243,7 @@ function Window:CreateTab(options)
         Parent = tab.ScrollingFrame
     })
 
+    -- Tab button
     tab.Button = Utility.Create("TextButton", {
         BackgroundTransparency = 1, Text = "", Size = UDim2.new(0,0,1,0),
         AutomaticSize = Enum.AutomaticSize.X, Parent = self.TabContainer
@@ -236,6 +269,7 @@ function Window:CreateTab(options)
 
     tab.Button.MouseButton1Click:Connect(function() self:SelectTab(tab) end)
 
+    -- Methods untuk komponen
     function tab:CreateSection(title)
         local section = { Title = title, Window = self }
         section.Container = Utility.Create("Frame", {
@@ -258,10 +292,6 @@ function Window:CreateTab(options)
         section.InnerList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             section.Container.Size = UDim2.new(0.95,0,0,section.InnerList.AbsoluteContentSize.Y + 30)
         end)
-        function section:AddElement(frame)
-            frame.Parent = self.ScrollingFrame
-            frame.Size = UDim2.new(0.9,0,0,36)
-        end
         table.insert(self.Sections or {}, section)
         return section
     end
@@ -312,8 +342,9 @@ function Window:CreateTab(options)
             Utility.Tween(knob, TweenInfo.new(0.2), { Position = enabled and UDim2.new(1,-20,0.5,-9) or UDim2.new(0,2,0.5,-9) })
             callback(enabled)
         end
+        -- Support touch + mouse
         switch.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 enabled = not enabled; update()
             end
         end)
@@ -364,20 +395,29 @@ function Window:CreateTab(options)
             thumb.Position = UDim2.new(p,0,0.5,0)
             callback(val)
         end
-        thumb.MouseButton1Down:Connect(function() dragging = true end)
-        UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
-        track.InputBegan:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseButton1 then
-                local relX = math.clamp((UserInputService:GetMouseLocation().X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+        local function inputBegan(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                local relX = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
                 setPercent(relX)
             end
-        end)
-        UserInputService.InputChanged:Connect(function(i)
-            if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
-                local relX = math.clamp((UserInputService:GetMouseLocation().X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+        end
+        local function inputEnded(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end
+        local function inputChanged(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local relX = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
                 setPercent(relX)
             end
-        end)
+        end
+        thumb.InputBegan:Connect(inputBegan)
+        track.InputBegan:Connect(inputBegan)
+        UserInputService.InputEnded:Connect(inputEnded)
+        UserInputService.InputChanged:Connect(inputChanged)
+
         return { Set = function(v) setPercent(math.clamp((v-min)/(max-min),0,1)) end }
     end
 
@@ -506,7 +546,7 @@ function Window:CreateTab(options)
             callback(currentColor)
         end
 
-        -- Hue slider
+        -- Hue slider (simplified, touch)
         local hueFrame = Utility.Create("Frame", {
             BackgroundTransparency = 1, Size = UDim2.new(0.8,0,0,14),
             Position = UDim2.new(0.1,0,0,60), Parent = container
@@ -523,21 +563,21 @@ function Window:CreateTab(options)
         Utility.Create("UICorner", { CornerRadius = UDim.new(1,0), Parent = hueThumb })
 
         local draggingHue = false
-        hueTrack.InputBegan:Connect(function(inp) if inp.UserInputType == Enum.UserInputType.MouseButton1 then draggingHue = true end end)
-        UserInputService.InputEnded:Connect(function(inp) if inp.UserInputType == Enum.UserInputType.MouseButton1 then draggingHue = false end end)
+        hueTrack.InputBegan:Connect(function(inp) if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then draggingHue = true end end)
+        UserInputService.InputEnded:Connect(function(inp) if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then draggingHue = false end end)
         UserInputService.InputChanged:Connect(function(inp)
-            if draggingHue and inp.UserInputType == Enum.UserInputType.MouseMovement then
+            if draggingHue and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
                 local relX = math.clamp((UserInputService:GetMouseLocation().X - hueTrack.AbsolutePosition.X) / hueTrack.AbsoluteSize.X, 0, 1)
                 h = relX; hueThumb.Position = UDim2.new(h,0,0.5,0); updateFromHSV()
             end
         end)
 
-        -- Sat/Val sliders
+        -- Sat/Val sliders (simplified)
         local svCont = Utility.Create("Frame", {
             BackgroundTransparency = 1, Size = UDim2.new(0.8,0,0,30),
             Position = UDim2.new(0.1,0,0,80), Parent = container
         })
-        local function makeSVSlider(yPos, initial, setFunc)
+        local function makeSVSlider(yPos, initial)
             local slider = Utility.Create("Frame", {
                 BackgroundColor3 = Color3.fromRGB(220,220,220), Size = UDim2.new(1,0,0,8),
                 Position = UDim2.new(0,0,0,yPos), BorderSizePixel = 0, Parent = svCont
@@ -555,17 +595,17 @@ function Window:CreateTab(options)
             Utility.Create("UICorner", { CornerRadius = UDim.new(1,0), Parent = thumb })
             return fill, thumb, slider
         end
-        local satFill, satThumb, satSlider = makeSVSlider(0, s, nil)
-        local valFill, valThumb, valSlider = makeSVSlider(18, v, nil)
+        local satFill, satThumb, satSlider = makeSVSlider(0, s)
+        local valFill, valThumb, valSlider = makeSVSlider(18, v)
 
         local satDragging, valDragging = false, false
-        satSlider.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then satDragging = true end end)
-        valSlider.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then valDragging = true end end)
+        satSlider.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then satDragging = true end end)
+        valSlider.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then valDragging = true end end)
         UserInputService.InputEnded:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseButton1 then satDragging = false; valDragging = false end
+            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then satDragging = false; valDragging = false end
         end)
         UserInputService.InputChanged:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseMovement then
+            if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then
                 local mousePos = UserInputService:GetMouseLocation()
                 if satDragging then
                     local relX = math.clamp((mousePos.X - satSlider.AbsolutePosition.X) / satSlider.AbsoluteSize.X, 0, 1)
@@ -584,7 +624,7 @@ function Window:CreateTab(options)
         }
     end
 
-    self.Tabs[tab] = tab
+    self.Tabs[#self.Tabs + 1] = tab
     if not self.ActiveTab then self:SelectTab(tab) end
     return tab
 end
@@ -629,7 +669,7 @@ function Window:Notification(options)
     local notif = Utility.Create("Frame", {
         BackgroundColor3 = self.Colors.Notification, BorderSizePixel = 0,
         Position = UDim2.new(1, 20, 1, -80), Size = UDim2.new(0,220,0,60),
-        Parent = self.ScreenGui
+        Parent = self.ScreenGui, ZIndex = 5
     })
     Utility.Create("UICorner", { CornerRadius = UDim.new(0,10), Parent = notif })
     Utility.ApplyStroke(notif, self.Colors.Stroke, 1)
@@ -658,5 +698,4 @@ end
 
 Library.CreateWindow = function(options) return Window.new(options) end
 
--- WAJIB! Mengembalikan object Library
 return Library
