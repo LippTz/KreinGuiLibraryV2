@@ -1,5 +1,4 @@
--- macOS GUI Library for Roblox (Fixed - Mobile & PC Support)
--- Fixes: tab content not showing, drag not working, touch support
+-- macOS GUI Library for Roblox (Final Fix - No overlay block, Colors bug fixed)
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -83,7 +82,7 @@ Library.Windows = {}
 local Window = {}
 Window.__index = Window
 
--- Universal drag function (mouse + touch)
+-- Universal drag (mouse + touch)
 local function MakeDraggable(handle, windowFrame)
     local dragging = false
     local startInputPos, startWindowPos
@@ -129,13 +128,17 @@ function Window.new(options)
     self.Tabs = {}
     self.ActiveTab = nil
 
-    local parent = (syn and syn.protect_gui and CoreGui) or game.Players.LocalPlayer:FindFirstChild("PlayerGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
+local parent = (syn and syn.protect_gui and CoreGui) or game.Players.LocalPlayer:FindFirstChild("PlayerGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
     self.ScreenGui = Utility.Create("ScreenGui", { Name = "macOS_GUI", Parent = parent, ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
 
-    -- Blur background (tidak menghalangi interaksi)
+    -- Blur background (non-blocking, bisa klik lewat)
     self.BlurFrame = Utility.Create("Frame", {
-        BackgroundTransparency = 0.5, BackgroundColor3 = Color3.fromRGB(0,0,0),
-        Size = UDim2.new(1,0,1,0), Parent = self.ScreenGui, ZIndex = 1
+        BackgroundTransparency = 0.7,
+        BackgroundColor3 = Color3.fromRGB(0,0,0),
+        Size = UDim2.new(1,0,1,0),
+        Parent = self.ScreenGui,
+        ZIndex = 1,
+        Active = false   -- Penting: membuat klik menembus ke bawah
     })
     Utility.AddBlur(self.BlurFrame, 15)
 
@@ -228,11 +231,10 @@ function Window:CreateTab(options)
         BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), Visible = false,
         Parent = self.ContentFrame
     })
-    -- ScrollingFrame dengan AutomaticCanvasSize agar konten muncul
     tab.ScrollingFrame = Utility.Create("ScrollingFrame", {
         BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0),
         CanvasSize = UDim2.new(0,0,0,0),
-        AutomaticCanvasSize = Enum.AutomaticSize.Y,  -- FIX: konten akan tampil
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
         ScrollBarThickness = 3,
         ScrollBarImageColor3 = self.Colors.Accent,
         Parent = tab.Content
@@ -243,7 +245,6 @@ function Window:CreateTab(options)
         Parent = tab.ScrollingFrame
     })
 
-    -- Tab button
     tab.Button = Utility.Create("TextButton", {
         BackgroundTransparency = 1, Text = "", Size = UDim2.new(0,0,1,0),
         AutomaticSize = Enum.AutomaticSize.X, Parent = self.TabContainer
@@ -269,18 +270,18 @@ function Window:CreateTab(options)
 
     tab.Button.MouseButton1Click:Connect(function() self:SelectTab(tab) end)
 
-    -- Methods untuk komponen
+    -- Method - method komponen (perbaikan: gunakan self.Window.Colors)
     function tab:CreateSection(title)
-        local section = { Title = title, Window = self }
+        local section = { Title = title, Window = self.Window }
         section.Container = Utility.Create("Frame", {
-            BackgroundColor3 = self.Colors.SectionBackground, BorderSizePixel = 0,
+            BackgroundColor3 = self.Window.Colors.SectionBackground, BorderSizePixel = 0,
             Size = UDim2.new(0.95,0,0,0), AutomaticSize = Enum.AutomaticSize.Y,
             Parent = self.ScrollingFrame
         })
         Utility.Create("UICorner", { CornerRadius = UDim.new(0,8), Parent = section.Container })
-        Utility.ApplyStroke(section.Container, self.Colors.Stroke, 1)
+        Utility.ApplyStroke(section.Container, self.Window.Colors.Stroke, 1)
         Utility.Create("TextLabel", {
-            BackgroundTransparency = 1, Text = title, TextColor3 = self.Colors.SecondaryText,
+            BackgroundTransparency = 1, Text = title, TextColor3 = self.Window.Colors.SecondaryText,
             Font = Enum.Font.GothamBold, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left,
             Size = UDim2.new(1,-20,0,24), Position = UDim2.new(0,10,0,8), Parent = section.Container
         })
@@ -298,15 +299,15 @@ function Window:CreateTab(options)
 
     function tab:CreateButton(text, callback, style)
         style = style or "primary"
-        local color = style == "primary" and self.Colors.ButtonPrimary or style == "danger" and self.Colors.Danger or self.Colors.ButtonSecondary
-        local textColor = style == "secondary" and self.Colors.Text or Color3.fromRGB(255,255,255)
+        local color = style == "primary" and self.Window.Colors.ButtonPrimary or style == "danger" and self.Window.Colors.Danger or self.Window.Colors.ButtonSecondary
+        local textColor = style == "secondary" and self.Window.Colors.Text or Color3.fromRGB(255,255,255)
         local btn = Utility.Create("TextButton", {
             BackgroundColor3 = color, Text = text, TextColor3 = textColor,
             Font = Enum.Font.GothamBold, TextSize = 13, BorderSizePixel = 0,
             Size = UDim2.new(0.9,0,0,30), Parent = self.ScrollingFrame
         })
         Utility.Create("UICorner", { CornerRadius = UDim.new(0,6), Parent = btn })
-        Utility.ApplyStroke(btn, self.Colors.Stroke, 1)
+        Utility.ApplyStroke(btn, self.Window.Colors.Stroke, 1)
         btn.MouseButton1Click:Connect(callback or function() end)
         return btn
     end
@@ -320,12 +321,12 @@ function Window:CreateTab(options)
         })
         Utility.Create("TextLabel", {
             BackgroundTransparency = 1, Text = options.Title or "Toggle",
-            TextColor3 = self.Colors.Text, Font = Enum.Font.Gotham, TextSize = 13,
+            TextColor3 = self.Window.Colors.Text, Font = Enum.Font.Gotham, TextSize = 13,
             TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(0.7,0,1,0),
             Parent = container
         })
         local switch = Utility.Create("Frame", {
-            BackgroundColor3 = default and self.Colors.ToggleTrackOn or self.Colors.ToggleTrackOff,
+            BackgroundColor3 = default and self.Window.Colors.ToggleTrackOn or self.Window.Colors.ToggleTrackOff,
             Size = UDim2.new(0,40,0,22), Position = UDim2.new(1,-40,0.5,-11),
             BorderSizePixel = 0, Parent = container
         })
@@ -338,11 +339,10 @@ function Window:CreateTab(options)
         Utility.Create("UICorner", { CornerRadius = UDim.new(1,0), Parent = knob })
         local enabled = default
         local function update()
-            Utility.Tween(switch, TweenInfo.new(0.2), { BackgroundColor3 = enabled and self.Colors.ToggleTrackOn or self.Colors.ToggleTrackOff })
+            Utility.Tween(switch, TweenInfo.new(0.2), { BackgroundColor3 = enabled and self.Window.Colors.ToggleTrackOn or self.Window.Colors.ToggleTrackOff })
             Utility.Tween(knob, TweenInfo.new(0.2), { Position = enabled and UDim2.new(1,-20,0.5,-9) or UDim2.new(0,2,0.5,-9) })
             callback(enabled)
         end
-        -- Support touch + mouse
         switch.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 enabled = not enabled; update()
@@ -360,23 +360,23 @@ function Window:CreateTab(options)
         })
         Utility.Create("TextLabel", {
             BackgroundTransparency = 1, Text = options.Title or "Slider",
-            TextColor3 = self.Colors.Text, Font = Enum.Font.Gotham, TextSize = 13,
+            TextColor3 = self.Window.Colors.Text, Font = Enum.Font.Gotham, TextSize = 13,
             TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(0.4,0,1,0),
             Parent = container
         })
         local valLabel = Utility.Create("TextLabel", {
             BackgroundTransparency = 1, Text = tostring(default),
-            TextColor3 = self.Colors.Text, Font = Enum.Font.GothamBold, TextSize = 13,
+            TextColor3 = self.Window.Colors.Text, Font = Enum.Font.GothamBold, TextSize = 13,
             Size = UDim2.new(0,40,1,0), Position = UDim2.new(1,-40,0,0),
             Parent = container
         })
         local track = Utility.Create("Frame", {
-            BackgroundColor3 = self.Colors.SliderTrack, Size = UDim2.new(1,-90,0,4),
+            BackgroundColor3 = self.Window.Colors.SliderTrack, Size = UDim2.new(1,-90,0,4),
             Position = UDim2.new(0,5,0.5,-2), BorderSizePixel = 0, Parent = container
         })
         Utility.Create("UICorner", { CornerRadius = UDim.new(1,0), Parent = track })
         local fill = Utility.Create("Frame", {
-            BackgroundColor3 = self.Colors.Accent, Size = UDim2.new((default-min)/(max-min),0,1,0),
+            BackgroundColor3 = self.Window.Colors.Accent, Size = UDim2.new((default-min)/(max-min),0,1,0),
             BorderSizePixel = 0, Parent = track
         })
         Utility.Create("UICorner", { CornerRadius = UDim.new(1,0), Parent = fill })
@@ -431,28 +431,28 @@ function Window:CreateTab(options)
         })
         Utility.Create("TextLabel", {
             BackgroundTransparency = 1, Text = options.Title or "Dropdown",
-            TextColor3 = self.Colors.Text, Font = Enum.Font.Gotham, TextSize = 13,
+            TextColor3 = self.Window.Colors.Text, Font = Enum.Font.Gotham, TextSize = 13,
             TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(0.4,0,1,0),
             Parent = container
         })
         local selectedText = Utility.Create("TextLabel", {
-            BackgroundTransparency = 1, Text = default, TextColor3 = self.Colors.Text,
+            BackgroundTransparency = 1, Text = default, TextColor3 = self.Window.Colors.Text,
             Font = Enum.Font.GothamBold, TextSize = 13, Size = UDim2.new(1,-100,1,0),
             Position = UDim2.new(0.4,0,0,0), TextXAlignment = Enum.TextXAlignment.Right,
             Parent = container
         })
         local arrow = Utility.Create("TextButton", {
-            BackgroundTransparency = 1, Text = "▼", TextColor3 = self.Colors.Text,
+            BackgroundTransparency = 1, Text = "▼", TextColor3 = self.Window.Colors.Text,
             Font = Enum.Font.GothamBold, TextSize = 10, Size = UDim2.new(0,20,1,0),
             Position = UDim2.new(1,-20,0,0), Parent = container
         })
         local dropdownFrame = Utility.Create("Frame", {
-            BackgroundColor3 = self.Colors.DropdownList, Size = UDim2.new(1,0,0,0),
+            BackgroundColor3 = self.Window.Colors.DropdownList, Size = UDim2.new(1,0,0,0),
             Position = UDim2.new(0,0,1,0), BorderSizePixel = 0, Visible = false,
             Parent = container
         })
         Utility.Create("UICorner", { CornerRadius = UDim.new(0,6), Parent = dropdownFrame })
-        Utility.ApplyStroke(dropdownFrame, self.Colors.Stroke, 1)
+        Utility.ApplyStroke(dropdownFrame, self.Window.Colors.Stroke, 1)
         local listLayout = Utility.Create("UIListLayout", {
             Padding = UDim.new(0,2), FillDirection = Enum.FillDirection.Vertical,
             HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder,
@@ -462,7 +462,7 @@ function Window:CreateTab(options)
             for _, v in pairs(dropdownFrame:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
             for _, item in ipairs(items) do
                 local btn = Utility.Create("TextButton", {
-                    BackgroundTransparency = 1, Text = item, TextColor3 = self.Colors.Text,
+                    BackgroundTransparency = 1, Text = item, TextColor3 = self.Window.Colors.Text,
                     Font = Enum.Font.Gotham, TextSize = 12, Size = UDim2.new(0.95,0,0,24),
                     Parent = dropdownFrame
                 })
@@ -492,14 +492,14 @@ function Window:CreateTab(options)
         })
         Utility.Create("TextLabel", {
             BackgroundTransparency = 1, Text = options.Title or "Keybind",
-            TextColor3 = self.Colors.Text, Font = Enum.Font.Gotham, TextSize = 13,
+            TextColor3 = self.Window.Colors.Text, Font = Enum.Font.Gotham, TextSize = 13,
             TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(0.5,0,1,0),
             Parent = container
         })
         local boundKey = default
         local keyBtn = Utility.Create("TextButton", {
-            BackgroundColor3 = self.Colors.ButtonSecondary, Text = boundKey and boundKey.Name or "None",
-            TextColor3 = self.Colors.Text, Font = Enum.Font.GothamBold, TextSize = 12,
+            BackgroundColor3 = self.Window.Colors.ButtonSecondary, Text = boundKey and boundKey.Name or "None",
+            TextColor3 = self.Window.Colors.Text, Font = Enum.Font.GothamBold, TextSize = 12,
             BorderSizePixel = 0, Size = UDim2.new(0,70,0,24),
             Position = UDim2.new(1,-70,0.5,-12), Parent = container
         })
@@ -527,7 +527,7 @@ function Window:CreateTab(options)
         })
         Utility.Create("TextLabel", {
             BackgroundTransparency = 1, Text = options.Title or "Color Picker",
-            TextColor3 = self.Colors.Text, Font = Enum.Font.GothamBold, TextSize = 12,
+            TextColor3 = self.Window.Colors.Text, Font = Enum.Font.GothamBold, TextSize = 12,
             TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(0.5,0,0,20),
             Parent = container
         })
@@ -536,7 +536,7 @@ function Window:CreateTab(options)
             Position = UDim2.new(0.1,0,0,25), BorderSizePixel = 0, Parent = container
         })
         Utility.Create("UICorner", { CornerRadius = UDim.new(0,6), Parent = preview })
-        Utility.ApplyStroke(preview, self.Colors.Stroke, 1)
+        Utility.ApplyStroke(preview, self.Window.Colors.Stroke, 1)
 
         local h, s, v = Color3.toHSV(default)
         local currentColor = default
@@ -546,7 +546,6 @@ function Window:CreateTab(options)
             callback(currentColor)
         end
 
-        -- Hue slider (simplified, touch)
         local hueFrame = Utility.Create("Frame", {
             BackgroundTransparency = 1, Size = UDim2.new(0.8,0,0,14),
             Position = UDim2.new(0.1,0,0,60), Parent = container
@@ -572,7 +571,6 @@ function Window:CreateTab(options)
             end
         end)
 
-        -- Sat/Val sliders (simplified)
         local svCont = Utility.Create("Frame", {
             BackgroundTransparency = 1, Size = UDim2.new(0.8,0,0,30),
             Position = UDim2.new(0.1,0,0,80), Parent = container
@@ -584,7 +582,7 @@ function Window:CreateTab(options)
             })
             Utility.Create("UICorner", { CornerRadius = UDim.new(1,0), Parent = slider })
             local fill = Utility.Create("Frame", {
-                BackgroundColor3 = self.Colors.Accent, Size = UDim2.new(initial,0,1,0), Parent = slider
+                BackgroundColor3 = self.Window.Colors.Accent, Size = UDim2.new(initial,0,1,0), Parent = slider
             })
             Utility.Create("UICorner", { CornerRadius = UDim.new(1,0), Parent = fill })
             local thumb = Utility.Create("TextButton", {
