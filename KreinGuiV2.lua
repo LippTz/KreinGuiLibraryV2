@@ -1,4 +1,4 @@
--- KreinGuiV2 Ultimate ― Light fixed, 6 Tema, 50+ Ikon, Smart Minimize
+-- KreinGuiV2 Ultimate – Polished Minimize, Stacked Notif, Light fix, Theme menu
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -30,7 +30,7 @@ local function AddStroke(parent, color, thickness, transparency)
 end
 
 local function AddShadow(parent, size, transparency)
-    return Create("ImageLabel", {
+    local shadow = Create("ImageLabel", {
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundTransparency = 1,
         Position = UDim2.new(0.5, 0, 0.5, 4),
@@ -43,6 +43,7 @@ local function AddShadow(parent, size, transparency)
         SliceCenter = Rect.new(49, 49, 450, 450),
         Parent = parent
     })
+    return shadow
 end
 
 local function MakePremiumButton(parent, text, bgColor, txtColor, zIndex, callback)
@@ -150,7 +151,7 @@ local function MakePremiumButton(parent, text, bgColor, txtColor, zIndex, callba
 end
 
 -- ============================
--- TEMA (6 tema)
+-- TEMA (6 tema, Light sudah diperbaiki)
 -- ============================
 local Themes = {
     Dark = {
@@ -189,11 +190,11 @@ local Themes = {
         WindowBg = Color3.fromRGB(250,250,252),
         TitleBar = Color3.fromRGB(242,242,247),
         Sidebar = Color3.fromRGB(235,235,240),
-        SidebarDivider = Color3.fromRGB(210,210,220),
-        SidebarText = Color3.fromRGB(90,90,105),
-        SidebarHover = Color3.fromRGB(225,225,233),
-        SidebarActive = Color3.fromRGB(215,215,228),
-        SidebarActiveText = Color3.fromRGB(20,20,35),
+        SidebarDivider = Color3.fromRGB(200,200,210),
+        SidebarText = Color3.fromRGB(80,80,100),
+        SidebarHover = Color3.fromRGB(220,220,230),
+        SidebarActive = Color3.fromRGB(210,210,220),
+        SidebarActiveText = Color3.fromRGB(15,15,30),
         Text = Color3.fromRGB(20,20,30),
         SubText = Color3.fromRGB(100,100,120),
         Accent = Color3.fromRGB(80,100,240),
@@ -201,18 +202,18 @@ local Themes = {
         Success = Color3.fromRGB(30,170,80),
         Warning = Color3.fromRGB(210,150,20),
         SectionBg = Color3.fromRGB(255,255,255),
-        SectionStroke = Color3.fromRGB(225,225,235),
+        SectionStroke = Color3.fromRGB(220,220,230),
         BtnPrimary = Color3.fromRGB(80,100,240),
         BtnSecondary = Color3.fromRGB(230,230,240),
         BtnDanger = Color3.fromRGB(210,50,50),
-        ToggleOff = Color3.fromRGB(200,200,215),
+        ToggleOff = Color3.fromRGB(195,195,210),
         ToggleOn = Color3.fromRGB(30,170,80),
         SliderTrack = Color3.fromRGB(210,210,225),
         SliderFill = Color3.fromRGB(80,100,240),
         InputBg = Color3.fromRGB(248,248,252),
         DropdownBg = Color3.fromRGB(252,252,255),
         NotifBg = Color3.fromRGB(255,255,255),
-        Stroke = Color3.fromRGB(215,215,228),
+        Stroke = Color3.fromRGB(210,210,225),
         TrafficRed = Color3.fromRGB(255,85,75),
         TrafficYellow = Color3.fromRGB(255,190,50),
         TrafficGreen = Color3.fromRGB(50,200,85)
@@ -348,7 +349,7 @@ local Themes = {
 }
 
 -- ============================
--- IKON (bisa diakses dari luar)
+-- IKON
 -- ============================
 local Icons = {
     home = "🏠", gear = "⚙️", combat = "⚔️", palette = "🎨",
@@ -438,6 +439,7 @@ local function MakeResizable(windowFrame, minWidth, minHeight)
             windowFrame.Size = UDim2.new(0, newW, 0, newH)
         end
     end)
+    return handle
 end
 
 function Window.new(options)
@@ -450,8 +452,9 @@ function Window.new(options)
     self.Tabs = {}
     self.ActiveTab = nil
     self._updaters = {}
+    self._notifQueue = {}
+    self._notifY = 88  -- starting Y offset for notifications
 
-    -- Default size & position untuk restore minimize
     self.DefaultSize = UDim2.new(0, 760, 0, 540)
     self.DefaultPos = UDim2.new(0.5, -380, 0.5, -270)
 
@@ -533,7 +536,8 @@ function Window.new(options)
     TrafficLight(self.Colors.TrafficYellow, 36, Icons.minimize, function() self:ToggleMinimize() end)
     TrafficLight(self.Colors.TrafficGreen, 60, Icons.maximize, function() self:ToggleMaximize() end)
 
-    Create("TextLabel", {
+    -- Icon & Title
+    self.IconLabel = Create("TextLabel", {
         BackgroundTransparency = 1,
         Text = self.Icon,
         TextColor3 = self.Colors.Accent,
@@ -544,7 +548,7 @@ function Window.new(options)
         ZIndex = 11,
         Parent = self.TitleBar
     })
-    Create("TextLabel", {
+    self.TitleLabel = Create("TextLabel", {
         BackgroundTransparency = 1,
         Text = self.Title,
         TextColor3 = self.Colors.Text,
@@ -556,8 +560,9 @@ function Window.new(options)
         ZIndex = 11,
         Parent = self.TitleBar
     })
+    self.SubtitleLabel = nil
     if self.Subtitle ~= "" then
-        Create("TextLabel", {
+        self.SubtitleLabel = Create("TextLabel", {
             BackgroundTransparency = 1,
             Text = self.Subtitle,
             TextColor3 = self.Colors.SubText,
@@ -572,7 +577,7 @@ function Window.new(options)
     end
 
     MakeDraggable(self.TitleBar, self.Window)
-    MakeResizable(self.Window, 500, 350)
+    self.ResizeHandle = MakeResizable(self.Window, 500, 350)
 
     -- Sidebar
     self.Sidebar = Create("Frame", {
@@ -679,6 +684,7 @@ function Window.new(options)
         Parent = self.ProfileFrame
     })
 
+    -- Profile menu (daftar tema)
     local profileMenu = Create("Frame", {
         BackgroundColor3 = self.Colors.DropdownBg,
         BorderSizePixel = 0,
@@ -696,32 +702,43 @@ function Window.new(options)
         SortOrder = Enum.SortOrder.LayoutOrder,
         Parent = profileMenu
     })
-    local function addMenuItem(text, callback)
-        local btn = Create("TextButton", {
+    -- Sub-menu tema
+    local themeNames = {"Dark", "Light", "Ocean", "Sunset", "Midnight", "Forest"}
+    for _, name in ipairs(themeNames) do
+        Create("TextButton", {
             BackgroundTransparency = 1,
-            Text = text,
+            Text = name,
             TextColor3 = self.Colors.Text,
             Font = Enum.Font.Gotham,
             TextSize = 11,
             Size = UDim2.new(0.9,0,0,26),
             Parent = profileMenu,
             ZIndex = 201
-        })
-        btn.MouseButton1Click:Connect(function()
+        }).MouseButton1Click:Connect(function()
             profileMenu.Visible = false
-            callback()
+            self:SetTheme(name)
         end)
     end
-    addMenuItem("Change Theme", function()
-        local newTheme = self.Theme == "Dark" and "Light" or "Dark"
-        self:SetTheme(newTheme)
+    -- Add "Destroy GUI" at the bottom
+    Create("TextButton", {
+        BackgroundTransparency = 1,
+        Text = "Destroy GUI",
+        TextColor3 = self.Colors.Danger,
+        Font = Enum.Font.Gotham,
+        TextSize = 11,
+        Size = UDim2.new(0.9,0,0,26),
+        Parent = profileMenu,
+        ZIndex = 201
+    }).MouseButton1Click:Connect(function()
+        profileMenu.Visible = false
+        self:Destroy()
     end)
-    addMenuItem("Destroy GUI", function() self:Destroy() end)
+
     menuBtn.MouseButton1Click:Connect(function()
         if not profileMenu.Visible then
             local absPos = menuBtn.AbsolutePosition
             profileMenu.Position = UDim2.new(0, absPos.X - 120, 0, absPos.Y - 30)
-            profileMenu.Size = UDim2.new(0, 140, 0, 2*28 + 8)
+            profileMenu.Size = UDim2.new(0, 140, 0, #themeNames * 28 + 32)
         end
         profileMenu.Visible = not profileMenu.Visible
     end)
@@ -762,6 +779,12 @@ function Window:SetTheme(themeName)
     end
     self.Window.BackgroundColor3 = self.Colors.WindowBg
     self.ProfileFrame.BackgroundColor3 = self.Colors.SidebarActive
+    self.TitleBar.BackgroundColor3 = self.Colors.TitleBar
+    self.IconLabel.TextColor3 = self.Colors.Accent
+    self.TitleLabel.TextColor3 = self.Colors.Text
+    if self.SubtitleLabel then
+        self.SubtitleLabel.TextColor3 = self.Colors.SubText
+    end
     self:Notification({ Title = "Theme Updated", Description = "Theme: " .. themeName, Duration = 2 })
 end
 
@@ -1185,21 +1208,81 @@ function Window:Notification(options)
     local dur = options.Duration or 3.5
     local ntype = options.Type or "info"
     local accentColor = ntype == "success" and C.Success or ntype == "danger" and C.Danger or ntype == "warning" and C.Warning or C.Accent
-    local notif = Create("Frame", { BackgroundColor3 = C.NotifBg, BorderSizePixel = 0, Position = UDim2.new(1,20,1,-88), Size = UDim2.new(0,260,0,72), ZIndex = 300, Parent = self.Gui })
+
+    -- Geser notif yang sudah ada ke atas
+    local shiftAmount = 80
+    for _, existing in ipairs(self._notifQueue) do
+        if existing and existing.Frame then
+            local newY = existing.Frame.Position.Y.Offset - shiftAmount
+            Tween(existing.Frame, TweenInfo.new(0.25, Enum.EasingStyle.Quart), { Position = UDim2.new(1, -276, 0, newY) })
+        end
+    end
+
+    local notif = Create("Frame", {
+        BackgroundColor3 = C.NotifBg,
+        BorderSizePixel = 0,
+        Position = UDim2.new(1, 20, 1, -self._notifY),
+        Size = UDim2.new(0, 260, 0, 72),
+        ZIndex = 300,
+        Parent = self.Gui
+    })
     AddCorner(notif, 10)
     AddStroke(notif, accentColor, 1, 0.5)
-    Create("Frame", { BackgroundColor3 = accentColor, BorderSizePixel = 0, Size = UDim2.new(0,3,1,0), ZIndex = 301, Parent = notif })
-    Create("TextLabel", { BackgroundTransparency = 1, Text = title, TextColor3 = C.Text, Font = Enum.Font.GothamBold, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(1,-22,0,20), Position = UDim2.new(0,14,0,10), ZIndex = 301, Parent = notif })
-    Create("TextLabel", { BackgroundTransparency = 1, Text = desc, TextColor3 = C.SubText, Font = Enum.Font.Gotham, TextSize = 10, TextXAlignment = Enum.TextXAlignment.Left, TextWrapped = true, Size = UDim2.new(1,-22,0,30), Position = UDim2.new(0,14,0,34), ZIndex = 301, Parent = notif })
-    local progressBg = Create("Frame", { BackgroundColor3 = C.Stroke, BorderSizePixel = 0, Position = UDim2.new(0,14,1,-6), Size = UDim2.new(1,-28,0,2), ZIndex = 301, Parent = notif })
+    Create("Frame", {
+        BackgroundColor3 = accentColor,
+        BorderSizePixel = 0,
+        Size = UDim2.new(0, 3, 1, 0),
+        ZIndex = 301,
+        Parent = notif
+    })
+    Create("TextLabel", {
+        BackgroundTransparency = 1, Text = title,
+        TextColor3 = C.Text, Font = Enum.Font.GothamBold, TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Size = UDim2.new(1, -22, 0, 20), Position = UDim2.new(0, 14, 0, 10),
+        ZIndex = 301, Parent = notif
+    })
+    Create("TextLabel", {
+        BackgroundTransparency = 1, Text = desc,
+        TextColor3 = C.SubText, Font = Enum.Font.Gotham, TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Left, TextWrapped = true,
+        Size = UDim2.new(1, -22, 0, 30), Position = UDim2.new(0, 14, 0, 34),
+        ZIndex = 301, Parent = notif
+    })
+    local progressBg = Create("Frame", {
+        BackgroundColor3 = C.Stroke, BorderSizePixel = 0,
+        Position = UDim2.new(0, 14, 1, -6), Size = UDim2.new(1, -28, 0, 2),
+        ZIndex = 301, Parent = notif
+    })
     AddCorner(progressBg, 1)
-    local progressFill = Create("Frame", { BackgroundColor3 = accentColor, BorderSizePixel = 0, Size = UDim2.new(1,0,1,0), ZIndex = 302, Parent = progressBg })
+    local progressFill = Create("Frame", {
+        BackgroundColor3 = accentColor, BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 1, 0), ZIndex = 302, Parent = progressBg
+    })
     AddCorner(progressFill, 1)
-    Tween(progressFill, TweenInfo.new(dur, Enum.EasingStyle.Linear), { Size = UDim2.new(0,0,1,0) })
-    Tween(notif, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Position = UDim2.new(1,-276,1,-88) })
+    Tween(progressFill, TweenInfo.new(dur, Enum.EasingStyle.Linear), { Size = UDim2.new(0, 0, 1, 0) })
+
+    Tween(notif, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        Position = UDim2.new(1, -276, 1, -self._notifY)
+    })
+
+    local notifData = { Frame = notif, ExpireTime = tick() + dur }
+    table.insert(self._notifQueue, notifData)
+
     task.delay(dur, function()
-        Tween(notif, TweenInfo.new(0.35, Enum.EasingStyle.Quint), { Position = UDim2.new(1,20,1,-88) })
-        task.delay(0.4, function() notif:Destroy() end)
+        Tween(notif, TweenInfo.new(0.35, Enum.EasingStyle.Quint), {
+            Position = UDim2.new(1, 20, 1, notif.Position.Y.Offset)
+        })
+        task.delay(0.4, function()
+            notif:Destroy()
+            -- hapus dari queue
+            for i, n in ipairs(self._notifQueue) do
+                if n == notifData then
+                    table.remove(self._notifQueue, i)
+                    break
+                end
+            end
+        end)
     end)
 end
 
@@ -1207,13 +1290,23 @@ function Window:ToggleMinimize()
     local ti = TweenInfo.new(0.35, Enum.EasingStyle.Quint)
     self.Minimized = not self.Minimized
     if self.Minimized then
-        -- Simpan ukuran sekarang, lalu tween ke kecil
         self._currentSize = self.Window.Size
         self._currentPos = self.Window.Position
-        Tween(self.Window, ti, { Size = UDim2.new(0, 220, 0, 54), Position = UDim2.new(0, 14, 1, -72) })
+        -- Resize handle hilang
+        self.ResizeHandle.Visible = false
+        Tween(self.Window, ti, {
+            Size = UDim2.new(0, 240, 0, 54),
+            Position = UDim2.new(0, 14, 1, -72)
+        })
+        -- sembunyikan subtitle selama minimize
+        if self.SubtitleLabel then self.SubtitleLabel.Visible = false end
     else
-        -- Kembalikan ke ukuran default (bukan _currentSize) agar user tidak bingung setelah resize
-        Tween(self.Window, ti, { Size = self.DefaultSize, Position = self.DefaultPos })
+        self.ResizeHandle.Visible = true
+        Tween(self.Window, ti, {
+            Size = self.DefaultSize,
+            Position = self.DefaultPos
+        })
+        if self.SubtitleLabel then self.SubtitleLabel.Visible = true end
     end
 end
 
