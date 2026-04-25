@@ -1,4 +1,4 @@
--- KreinGuiV2 Ultimate - Full fix + Profile Sidebar + Live Theme
+-- KreinGuiV2 Ultimate - Fixed & Polished
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -21,8 +21,8 @@ end
 
 local function AddStroke(parent, color, thickness, transparency)
     return Create("UIStroke", {
-        Color       = color or Color3.fromRGB(255,255,255),
-        Thickness   = thickness or 1,
+        Color = color or Color3.fromRGB(255,255,255),
+        Thickness = thickness or 1,
         Transparency = transparency or 0.85,
         ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
         Parent = parent
@@ -31,17 +31,17 @@ end
 
 local function AddShadow(parent, size, transparency)
     local shadow = Create("ImageLabel", {
-        AnchorPoint         = Vector2.new(0.5, 0.5),
+        AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundTransparency = 1,
-        Position            = UDim2.new(0.5, 0, 0.5, 4),
-        Size                = UDim2.new(1, size or 30, 1, size or 30),
-        ZIndex              = parent.ZIndex - 1,
-        Image               = "rbxassetid://6014261993",
-        ImageColor3         = Color3.new(0, 0, 0),
-        ImageTransparency   = transparency or 0.6,
-        ScaleType           = Enum.ScaleType.Slice,
-        SliceCenter         = Rect.new(49, 49, 450, 450),
-        Parent              = parent
+        Position = UDim2.new(0.5, 0, 0.5, 4),
+        Size = UDim2.new(1, size or 30, 1, size or 30),
+        ZIndex = parent.ZIndex - 1,
+        Image = "rbxassetid://6014261993",
+        ImageColor3 = Color3.new(0, 0, 0),
+        ImageTransparency = transparency or 0.6,
+        ScaleType = Enum.ScaleType.Slice,
+        SliceCenter = Rect.new(49, 49, 450, 450),
+        Parent = parent
     })
     return shadow
 end
@@ -50,21 +50,20 @@ local function MakePremiumButton(parent, text, bgColor, txtColor, zIndex, callba
     local glowFrame = Create("Frame", {
         BackgroundColor3 = bgColor,
         BackgroundTransparency = 0.75,
-        BorderSizePixel  = 0,
-        Size             = UDim2.new(0.96, 0, 0, 46),
-        ZIndex           = zIndex - 1,
-        Parent           = parent
+        BorderSizePixel = 0,
+        Size = UDim2.new(0.96, 0, 0, 46),
+        ZIndex = zIndex - 1,
+        Parent = parent
     })
     AddCorner(glowFrame, 12)
     local btnFrame = Create("Frame", {
         BackgroundColor3 = bgColor,
-        BorderSizePixel  = 0,
-        Size             = UDim2.new(1, 0, 1, 0),
-        ZIndex           = zIndex,
-        Parent           = glowFrame
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 1, 0),
+        ZIndex = zIndex,
+        Parent = glowFrame
     })
     AddCorner(btnFrame, 11)
-    -- Gradient gloss
     Create("UIGradient", {
         Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
@@ -79,7 +78,6 @@ local function MakePremiumButton(parent, text, bgColor, txtColor, zIndex, callba
         Rotation = 90,
         Parent = btnFrame
     })
-    -- Shine
     local shine = Create("Frame", {
         BackgroundColor3 = Color3.fromRGB(255,255,255),
         BackgroundTransparency = 0.82,
@@ -110,7 +108,6 @@ local function MakePremiumButton(parent, text, bgColor, txtColor, zIndex, callba
         AutoButtonColor = false,
         Parent = btnFrame
     })
-    -- Text shadow
     Create("TextLabel", {
         BackgroundTransparency = 1,
         Text = text,
@@ -258,6 +255,43 @@ local function MakeDraggable(handle, target)
     end)
 end
 
+local function MakeResizable(windowFrame, screenGui, minWidth, minHeight)
+    local resizeHandle = Create("TextButton", {
+        Active = true,
+        BackgroundColor3 = Color3.fromRGB(100,100,100),
+        BackgroundTransparency = 0.5,
+        BorderSizePixel = 0,
+        AnchorPoint = Vector2.new(1, 1),
+        Position = UDim2.new(1, -2, 1, -2),
+        Size = UDim2.new(0, 16, 0, 16),
+        Text = "",
+        ZIndex = 20,
+        Parent = windowFrame
+    })
+    AddCorner(resizeHandle, 3)
+    local dragging, startSize, startMouse
+    resizeHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            startSize = windowFrame.Size
+            startMouse = input.Position
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - startMouse
+            local newW = math.clamp(startSize.X.Offset + delta.X, minWidth or 500, 1200)
+            local newH = math.clamp(startSize.Y.Offset + delta.Y, minHeight or 350, 800)
+            windowFrame.Size = UDim2.new(0, newW, 0, newH)
+        end
+    end)
+end
+
 function Window.new(options)
     local self = setmetatable({}, Window)
     self.Title = options.Title or "KreinUI"
@@ -267,7 +301,7 @@ function Window.new(options)
     self.Colors = Themes[self.Theme]
     self.Tabs = {}
     self.ActiveTab = nil
-    self._updaters = {}  -- live theme updaters
+    self._updaters = {}
 
     local parent = (syn and syn.protect_gui and CoreGui) or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
     self.Gui = Create("ScreenGui", {
@@ -291,10 +325,11 @@ function Window.new(options)
     AddStroke(self.Window, self.Colors.Stroke, 1.5, 0.5)
     AddShadow(self.Window, 60, 0.45)
 
+    -- Title bar
     self.TitleBar = Create("Frame", {
         BackgroundColor3 = self.Colors.TitleBar,
         BorderSizePixel = 0,
-        Size = UDim2.new(1,0,0,52),
+        Size = UDim2.new(1,0,0,54),
         ZIndex = 10,
         Parent = self.Window
     })
@@ -307,7 +342,7 @@ function Window.new(options)
         ZIndex = 10,
         Parent = self.TitleBar
     })
-    local titleStroke = Create("Frame", {
+    Create("Frame", {
         BackgroundColor3 = self.Colors.Stroke,
         BorderSizePixel = 0,
         Position = UDim2.new(0,0,1,-1),
@@ -316,18 +351,17 @@ function Window.new(options)
         Parent = self.TitleBar
     })
 
-    -- Traffic lights dengan area klik lebih besar
     local function TrafficLight(color, posX, icon, callback)
         local btn = Create("TextButton", {
-            Active = true,  -- biar klik lancar
+            Active = true,
             BackgroundColor3 = color,
             BorderSizePixel = 0,
-            Position = UDim2.new(0, posX, 0.5, -9),
-            Size = UDim2.new(0, 18, 0, 18), -- perbesar
+            Position = UDim2.new(0, posX, 0.5, -10),
+            Size = UDim2.new(0, 20, 0, 20),
             Text = "",
             TextColor3 = Color3.fromRGB(80,30,20),
             Font = Enum.Font.GothamBold,
-            TextSize = 8,
+            TextSize = 9,
             ZIndex = 12,
             AutoButtonColor = false,
             Parent = self.TitleBar
@@ -345,18 +379,18 @@ function Window.new(options)
         return btn
     end
     TrafficLight(self.Colors.TrafficRed, 12, "✕", function() self:Destroy() end)
-    TrafficLight(self.Colors.TrafficYellow, 34, "–", function() self:ToggleMinimize() end)
-    TrafficLight(self.Colors.TrafficGreen, 56, "+", function() self:ToggleMaximize() end)
+    TrafficLight(self.Colors.TrafficYellow, 36, "–", function() self:ToggleMinimize() end)
+    TrafficLight(self.Colors.TrafficGreen, 60, "+", function() self:ToggleMaximize() end)
 
-    -- Title text
+    -- Icon & Title
     Create("TextLabel", {
         BackgroundTransparency = 1,
         Text = self.Icon,
         TextColor3 = self.Colors.Accent,
         Font = Enum.Font.GothamBold,
-        TextSize = 20,
-        Size = UDim2.new(0,26,0,26),
-        Position = UDim2.new(0,90,0.5,-13),
+        TextSize = 22,
+        Size = UDim2.new(0,28,0,28),
+        Position = UDim2.new(0,96,0.5,-14),
         ZIndex = 11,
         Parent = self.TitleBar
     })
@@ -365,10 +399,10 @@ function Window.new(options)
         Text = self.Title,
         TextColor3 = self.Colors.Text,
         Font = Enum.Font.GothamBold,
-        TextSize = 14,
+        TextSize = 15,
         TextXAlignment = Enum.TextXAlignment.Left,
-        Size = UDim2.new(0,220,0,18),
-        Position = UDim2.new(0,122,0.5,-14),
+        Size = UDim2.new(0,220,0,20),
+        Position = UDim2.new(0,130,0.5,-15),
         ZIndex = 11,
         Parent = self.TitleBar
     })
@@ -378,10 +412,10 @@ function Window.new(options)
             Text = self.Subtitle,
             TextColor3 = self.Colors.SubText,
             Font = Enum.Font.Gotham,
-            TextSize = 10,
+            TextSize = 11,
             TextXAlignment = Enum.TextXAlignment.Left,
-            Size = UDim2.new(0,220,0,13),
-            Position = UDim2.new(0,122,0.5,3),
+            Size = UDim2.new(0,220,0,15),
+            Position = UDim2.new(0,130,0.5,3),
             ZIndex = 11,
             Parent = self.TitleBar
         })
@@ -389,12 +423,15 @@ function Window.new(options)
 
     MakeDraggable(self.TitleBar, self.Window)
 
-    -- ── SIDEBAR ──
+    -- Resize handle
+    MakeResizable(self.Window, self.Gui, 500, 350)
+
+    -- SIDEBAR
     self.Sidebar = Create("Frame", {
         BackgroundColor3 = self.Colors.Sidebar,
         BorderSizePixel = 0,
-        Position = UDim2.new(0,0,0,52),
-        Size = UDim2.new(0,195,1,-52),
+        Position = UDim2.new(0,0,0,54),
+        Size = UDim2.new(0,195,1,-54),
         ZIndex = 6,
         Parent = self.Window
     })
@@ -407,12 +444,11 @@ function Window.new(options)
         Parent = self.Sidebar
     })
 
-    -- Sidebar scroll (tab hanya di atas, bawah untuk profil)
     self.SidebarScroll = Create("ScrollingFrame", {
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         Position = UDim2.new(0,0,0,8),
-        Size = UDim2.new(1,0,1,-68), -- dikurangi 60 untuk profil
+        Size = UDim2.new(1,0,1,-68),
         CanvasSize = UDim2.new(0,0,0,0),
         AutomaticCanvasSize = Enum.AutomaticSize.Y,
         ScrollBarThickness = 2,
@@ -421,33 +457,32 @@ function Window.new(options)
         Parent = self.Sidebar
     })
     self.SidebarLayout = Create("UIListLayout", {
-        Padding = UDim.new(0,4),
+        Padding = UDim.new(0,5),
         FillDirection = Enum.FillDirection.Vertical,
         HorizontalAlignment = Enum.HorizontalAlignment.Center,
         SortOrder = Enum.SortOrder.LayoutOrder,
         Parent = self.SidebarScroll
     })
     Create("UIPadding", {
-        PaddingTop = UDim.new(0,4),
-        PaddingBottom = UDim.new(0,4),
+        PaddingTop = UDim.new(0,6),
+        PaddingBottom = UDim.new(0,6),
         PaddingLeft = UDim.new(0,8),
         PaddingRight = UDim.new(0,8),
         Parent = self.SidebarScroll
     })
 
-    -- Profil di bawah sidebar
+    -- Profile
     self.ProfileFrame = Create("Frame", {
         BackgroundColor3 = self.Colors.SidebarActive,
         BorderSizePixel = 0,
-        Position = UDim2.new(0,0,1,-60),
-        Size = UDim2.new(1,-8,0,52),
+        Position = UDim2.new(0,4,1,-62),
+        Size = UDim2.new(1,-8,0,54),
         ZIndex = 7,
         Parent = self.Sidebar
     })
     AddCorner(self.ProfileFrame, 10)
     local userId = game.Players.LocalPlayer.UserId
     local username = game.Players.LocalPlayer.Name
-    -- Avatar
     local avatar = Create("ImageLabel", {
         BackgroundColor3 = self.Colors.Stroke,
         BorderSizePixel = 0,
@@ -466,7 +501,7 @@ function Window.new(options)
         TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         Size = UDim2.new(1, -56, 0, 18),
-        Position = UDim2.new(0, 48, 0.5, -14),
+        Position = UDim2.new(0, 48, 0.5, -15),
         ZIndex = 8,
         Parent = self.ProfileFrame
     })
@@ -483,6 +518,7 @@ function Window.new(options)
         Parent = self.ProfileFrame
     })
     local menuBtn = Create("TextButton", {
+        Active = true,
         BackgroundTransparency = 1,
         Text = "•••",
         TextColor3 = self.Colors.SidebarText,
@@ -494,15 +530,14 @@ function Window.new(options)
         AutoButtonColor = false,
         Parent = self.ProfileFrame
     })
-    -- Menu dropdown untuk profil
+    -- Profile menu
     local profileMenu = Create("Frame", {
         BackgroundColor3 = self.Colors.DropdownBg,
         BorderSizePixel = 0,
-        Position = UDim2.new(0,0,1,0),
         Size = UDim2.new(0,140,0,0),
         Visible = false,
-        ZIndex = 100,
-        Parent = self.Gui  -- langsung ke ScreenGui agar tidak terpotong
+        ZIndex = 200,
+        Parent = self.Gui
     })
     AddCorner(profileMenu, 8)
     AddStroke(profileMenu, self.Colors.Stroke, 1, 0.4)
@@ -522,30 +557,25 @@ function Window.new(options)
             TextSize = 11,
             Size = UDim2.new(0.9,0,0,26),
             Parent = profileMenu,
-            ZIndex = 101
+            ZIndex = 201
         })
         btn.MouseButton1Click:Connect(function()
             profileMenu.Visible = false
             callback()
         end)
-        return btn
     end
     addMenuItem("Change Theme", function()
         local newTheme = self.Theme == "Dark" and "Light" or "Dark"
         self:SetTheme(newTheme)
     end)
-    addMenuItem("Set Keybind", function()
-        -- contoh: keybind untuk toggle UI bisa diset manual
-        self:Notification({ Title = "Keybind", Description = "Click the keybind in Settings tab to set." })
-    end)
     addMenuItem("Destroy GUI", function() self:Destroy() end)
     menuBtn.MouseButton1Click:Connect(function()
-        profileMenu.Visible = not profileMenu.Visible
-        if profileMenu.Visible then
+        if not profileMenu.Visible then
             local absPos = menuBtn.AbsolutePosition
-            profileMenu.Position = UDim2.new(0, absPos.X - 120, 0, absPos.Y - 10)
-            profileMenu.Size = UDim2.new(0, 140, 0, 3*28 + 8)
+            profileMenu.Position = UDim2.new(0, absPos.X - 120, 0, absPos.Y - 30)
+            profileMenu.Size = UDim2.new(0, 140, 0, 2*28 + 8)
         end
+        profileMenu.Visible = not profileMenu.Visible
     end)
 
     -- Content area
@@ -553,13 +583,13 @@ function Window.new(options)
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         ClipsDescendants = true,
-        Position = UDim2.new(0,196,0,52),
-        Size = UDim2.new(1,-196,1,-52),
+        Position = UDim2.new(0,196,0,54),
+        Size = UDim2.new(1,-196,1,-54),
         ZIndex = 3,
         Parent = self.Window
     })
 
-    -- Animasi buka
+    -- Animasi masuk
     self.Window.Size = UDim2.new(0,760,0,0)
     self.Window.BackgroundTransparency = 1
     Tween(self.Window, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
@@ -571,29 +601,26 @@ function Window.new(options)
     return self
 end
 
--- ── Theme updater system ──
 function Window:RegisterUpdater(func)
     table.insert(self._updaters, func)
 end
 
 function Window:SetTheme(themeName)
     if not Themes[themeName] then return end
-    local oldColors = self.Colors
     self.Colors = Themes[themeName]
     self.Theme = themeName
-    -- Jalankan semua updater yang terdaftar
+    -- Jalankan semua updater
     for _, func in ipairs(self._updaters) do
         func(self.Colors)
     end
-    -- Perbarui warna statis window & profile langsung
+    -- Update window sendiri
     self.Window.BackgroundColor3 = self.Colors.WindowBg
     self.ProfileFrame.BackgroundColor3 = self.Colors.SidebarActive
-    self.ProfileFrame.TextLabel.TextColor3 = self.Colors.Text  -- kurang spesifik, perlu referensi
-    -- Notification contoh
+    -- Perbarui stroke
+    self.Window[2].Color = self.Colors.Stroke  -- asumsi shadow di indeks? Lebih baik simpan referensi
     self:Notification({ Title = "Theme Updated", Description = "Tema menjadi " .. themeName, Duration = 2 })
 end
 
--- ── CreateTab ──
 function Window:CreateTab(options)
     local C = self.Colors
     local tab = { Title = options.Title, Icon = options.Icon or "○", Window = self, Components = {} }
@@ -618,17 +645,17 @@ function Window:CreateTab(options)
         Parent = tab.Frame
     })
     Create("UIListLayout", {
-        Padding = UDim.new(0,10),
+        Padding = UDim.new(0,12),
         FillDirection = Enum.FillDirection.Vertical,
         HorizontalAlignment = Enum.HorizontalAlignment.Center,
         SortOrder = Enum.SortOrder.LayoutOrder,
         Parent = tab.Scroll
     })
     Create("UIPadding", {
-        PaddingTop = UDim.new(0,14),
-        PaddingBottom = UDim.new(0,14),
-        PaddingLeft = UDim.new(0,2),
-        PaddingRight = UDim.new(0,2),
+        PaddingTop = UDim.new(0,16),
+        PaddingBottom = UDim.new(0,16),
+        PaddingLeft = UDim.new(0,4),
+        PaddingRight = UDim.new(0,4),
         Parent = tab.Scroll
     })
 
@@ -636,7 +663,7 @@ function Window:CreateTab(options)
     tab.SideBtn = Create("TextButton", {
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
-        Size = UDim2.new(1,-8,0,42),
+        Size = UDim2.new(1,-8,0,44),
         Text = "",
         AutoButtonColor = false,
         ZIndex = 8,
@@ -645,16 +672,18 @@ function Window:CreateTab(options)
     })
     AddCorner(tab.SideBtn, 9)
 
-    tab.Indicator = Create("Frame", {
+    -- Simpan indicator sebagai referensi
+    local indicator = Create("Frame", {
         BackgroundColor3 = C.Accent,
         BorderSizePixel = 0,
-        Position = UDim2.new(0,0,0.5,-12),
-        Size = UDim2.new(0,3,0,24),
+        Position = UDim2.new(0,0,0.5,-13),
+        Size = UDim2.new(0,3,0,26),
         ZIndex = 9,
         Visible = false,
         Parent = tab.SideBtn
     })
-    AddCorner(tab.Indicator, 3)
+    AddCorner(indicator, 3)
+    tab.Indicator = indicator  -- simpan langsung, bukan tab.SideBtn.Indicator
 
     tab.IconLabel = Create("TextLabel", {
         BackgroundTransparency = 1,
@@ -691,14 +720,17 @@ function Window:CreateTab(options)
             Tween(tab.SideBtn, hoverTween, { BackgroundTransparency = 1 })
         end
     end)
-    tab.SideBtn.MouseButton1Click:Connect(function() self:SelectTab(tab) end)
+    tab.SideBtn.MouseButton1Click:Connect(function()
+        self:SelectTab(tab)
+    end)
 
-    -- Updater tema untuk tab
+    -- Updater tema untuk elemen tab
     self:RegisterUpdater(function(newColors)
-        tab.SideBtn.Indicator.BackgroundColor3 = newColors.Accent
+        tab.Indicator.BackgroundColor3 = newColors.Accent
         tab.IconLabel.TextColor3 = newColors.SidebarText
         tab.TitleLabel.TextColor3 = newColors.SidebarText
         if self.ActiveTab == tab then
+            tab.SideBtn.BackgroundTransparency = 0
             tab.SideBtn.BackgroundColor3 = newColors.SidebarActive
             tab.TitleLabel.TextColor3 = newColors.SidebarActiveText
         else
@@ -707,7 +739,7 @@ function Window:CreateTab(options)
         tab.Scroll.ScrollBarImageColor3 = newColors.Accent
     end)
 
-    -- helper baris
+    -- Helper baris
     local function MakeRow(title, height)
         local row = Create("Frame", {
             BackgroundTransparency = 1,
@@ -719,7 +751,7 @@ function Window:CreateTab(options)
         local lbl = Create("TextLabel", {
             BackgroundTransparency = 1,
             Text = title,
-            TextColor3 = C.Label,
+            TextColor3 = C.Label or C.SubText,
             Font = Enum.Font.Gotham,
             TextSize = 12,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -739,7 +771,7 @@ function Window:CreateTab(options)
         return row, right, lbl
     end
 
-    -- ── SECTION ──
+    -- ─── KOMPONEN ────────────────────────
     function tab:CreateSection(title)
         local section = {}
         section.Frame = Create("Frame", {
@@ -765,24 +797,24 @@ function Window:CreateTab(options)
             Text = title:upper(),
             TextColor3 = C.SubText,
             Font = Enum.Font.GothamBold,
-            TextSize = 9,
+            TextSize = 10,
             TextXAlignment = Enum.TextXAlignment.Left,
             Size = UDim2.new(1,-20,1,0),
-            Position = UDim2.new(0,12,0,0),
+            Position = UDim2.new(0,14,0,0),
             ZIndex = 5,
             Parent = header
         })
         Create("Frame", {
             BackgroundColor3 = C.SectionStroke,
             BorderSizePixel = 0,
-            Position = UDim2.new(0,12,1,-1),
-            Size = UDim2.new(1,-24,0,1),
+            Position = UDim2.new(0,14,1,-1),
+            Size = UDim2.new(1,-28,0,1),
             ZIndex = 5,
             Parent = header
         })
 
         section.List = Create("UIListLayout", {
-            Padding = UDim.new(0,2),
+            Padding = UDim.new(0,3),
             FillDirection = Enum.FillDirection.Vertical,
             HorizontalAlignment = Enum.HorizontalAlignment.Center,
             SortOrder = Enum.SortOrder.LayoutOrder,
@@ -790,20 +822,19 @@ function Window:CreateTab(options)
         })
         Create("UIPadding", {
             PaddingTop = UDim.new(0,30),
-            PaddingBottom = UDim.new(0,8),
-            PaddingLeft = UDim.new(0,8),
-            PaddingRight = UDim.new(0,8),
+            PaddingBottom = UDim.new(0,10),
+            PaddingLeft = UDim.new(0,10),
+            PaddingRight = UDim.new(0,10),
             Parent = section.Frame
         })
         section.List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            section.Frame.Size = UDim2.new(0.96,0,0,section.List.AbsoluteContentSize.Y + 46)
+            section.Frame.Size = UDim2.new(0.96,0,0,section.List.AbsoluteContentSize.Y + 48)
         end)
 
         table.insert(tab.Components, function(newColors)
             section.Frame.BackgroundColor3 = newColors.SectionBg
             stroke.Color = newColors.SectionStroke
             secTitle.TextColor3 = newColors.SubText
-            header[2].BackgroundColor3 = newColors.SectionStroke
         end)
 
         function section:AddRow(title2, height2)
@@ -817,7 +848,7 @@ function Window:CreateTab(options)
             local lbl = Create("TextLabel", {
                 BackgroundTransparency = 1,
                 Text = title2,
-                TextColor3 = C.Label,
+                TextColor3 = C.Label or C.SubText,
                 Font = Enum.Font.Gotham,
                 TextSize = 12,
                 TextXAlignment = Enum.TextXAlignment.Left,
@@ -835,31 +866,26 @@ function Window:CreateTab(options)
                 Parent = row2
             })
             table.insert(tab.Components, function(newColors)
-                lbl.TextColor3 = newColors.Label
+                lbl.TextColor3 = newColors.Label or newColors.SubText
             end)
             return row2, right2
         end
         return section
     end
 
-    -- ── BUTTON (PREMIUM) ──
     function tab:CreateButton(text, callback, style)
         style = style or "primary"
         local bgColor = style == "danger" and C.BtnDanger or style == "secondary" and C.BtnSecondary or C.BtnPrimary
         local txtColor = (style == "secondary") and C.Text or Color3.fromRGB(255,255,255)
         local glow, btnFrame = MakePremiumButton(tab.Scroll, text, bgColor, txtColor, 4, callback, style)
-        -- register untuk tema
-        local updater = function(newColors)
+        table.insert(tab.Components, function(newColors)
             local newBg = style == "danger" and newColors.BtnDanger or style == "secondary" and newColors.BtnSecondary or newColors.BtnPrimary
             glow.BackgroundColor3 = newBg
             btnFrame.BackgroundColor3 = newBg
-            -- update stroke & gradient? Skip detail
-        end
-        table.insert(tab.Components, updater)
+        end)
         return btnFrame
     end
 
-    -- ── TOGGLE ──
     function tab:CreateToggle(options)
         local enabled = options.Default or false
         local callback = options.Callback or function() end
@@ -904,7 +930,6 @@ function Window:CreateTab(options)
         return { Set = function(v) enabled = v; refresh() end, Get = function() return enabled end }
     end
 
-    -- ── SLIDER ──
     function tab:CreateSlider(options)
         local minV, maxV, val = options.Min or 0, options.Max or 100, options.Default or 0
         local callback = options.Callback or function() end
@@ -919,7 +944,7 @@ function Window:CreateTab(options)
         local lbl = Create("TextLabel", {
             BackgroundTransparency = 1,
             Text = options.Title or "Slider",
-            TextColor3 = C.Label,
+            TextColor3 = C.Label or C.SubText,
             Font = Enum.Font.Gotham,
             TextSize = 12,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -1008,7 +1033,7 @@ function Window:CreateTab(options)
         end)
 
         table.insert(tab.Components, function(newColors)
-            lbl.TextColor3 = newColors.Label
+            lbl.TextColor3 = newColors.Label or newColors.SubText
             valLabel.TextColor3 = newColors.Accent
             trackBg.BackgroundColor3 = newColors.SliderTrack
             fill.BackgroundColor3 = newColors.SliderFill
@@ -1016,7 +1041,6 @@ function Window:CreateTab(options)
         return { Set = function(v) setVal(math.clamp((v-minV)/(maxV-minV),0,1)) end, Get = function() return val end }
     end
 
-    -- ── DROPDOWN (POSISI ABSOLUT) ──
     function tab:CreateDropdown(options)
         local items = options.Items or {}
         local selected = options.Default or items[1] or "Select..."
@@ -1034,7 +1058,7 @@ function Window:CreateTab(options)
         local lbl = Create("TextLabel", {
             BackgroundTransparency = 1,
             Text = options.Title or "Dropdown",
-            TextColor3 = C.Label,
+            TextColor3 = C.Label or C.SubText,
             Font = Enum.Font.Gotham,
             TextSize = 12,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -1057,6 +1081,7 @@ function Window:CreateTab(options)
             Parent = container
         })
         local arrowBtn = Create("TextButton", {
+            Active = true,
             BackgroundTransparency = 1,
             Text = "▾",
             TextColor3 = C.SubText,
@@ -1068,13 +1093,13 @@ function Window:CreateTab(options)
             Parent = container
         })
 
-        -- List box dibuat di ScreenGui langsung
+        -- List frame di ScreenGui agar tidak terpotong
         local listFrame = Create("Frame", {
             BackgroundColor3 = C.DropdownBg,
             BorderSizePixel = 0,
             Size = UDim2.new(0,0,0,0),
             Visible = false,
-            ZIndex = 100,
+            ZIndex = 200,
             Parent = self.Gui
         })
         AddCorner(listFrame, 9)
@@ -1106,7 +1131,7 @@ function Window:CreateTab(options)
                     Font = Enum.Font.Gotham,
                     TextSize = 11,
                     Size = UDim2.new(1,0,0,28),
-                    ZIndex = 101,
+                    ZIndex = 201,
                     Parent = listFrame
                 })
                 AddCorner(b, 6)
@@ -1117,12 +1142,13 @@ function Window:CreateTab(options)
                     callback(item)
                 end)
             end
-            listFrame.Size = UDim2.new(0, container.AbsoluteSize.X, 0, math.min(#items*30+8, 180))
+            local listH = math.min(#items * 30 + 8, 180)
+            listFrame.Size = UDim2.new(0, container.AbsoluteSize.X, 0, listH)
         end
         buildList()
 
         local open = false
-        arrowBtn.MouseButton1Click:Connect(function()
+        local function toggleDropdown()
             open = not open
             listFrame.Visible = open
             if open then
@@ -1131,12 +1157,26 @@ function Window:CreateTab(options)
                 listFrame.Position = UDim2.new(0, absPos.X, 0, absPos.Y + absSize.Y + 2)
                 listFrame.Size = UDim2.new(0, absSize.X, 0, math.min(#items*30+8, 180))
             end
-        end)
+        end
+        arrowBtn.MouseButton1Click:Connect(toggleDropdown)
+
+        -- Tutup saat klik di luar
+        local function onInputBegan(input)
+            if open and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                local pos = input.Position
+                if not (listFrame.AbsolutePosition.X <= pos.X and pos.X <= listFrame.AbsolutePosition.X + listFrame.AbsoluteSize.X
+                    and listFrame.AbsolutePosition.Y <= pos.Y and pos.Y <= listFrame.AbsolutePosition.Y + listFrame.AbsoluteSize.Y) then
+                    listFrame.Visible = false
+                    open = false
+                end
+            end
+        end
+        UserInputService.InputBegan:Connect(onInputBegan)
 
         table.insert(tab.Components, function(newColors)
             container.BackgroundColor3 = newColors.SectionBg
             stroke.Color = newColors.SectionStroke
-            lbl.TextColor3 = newColors.Label
+            lbl.TextColor3 = newColors.Label or newColors.SubText
             selLabel.TextColor3 = newColors.Text
             arrowBtn.TextColor3 = newColors.SubText
             listFrame.BackgroundColor3 = newColors.DropdownBg
@@ -1144,7 +1184,6 @@ function Window:CreateTab(options)
         return { SetItems = function(newItems) items = newItems; buildList() end, GetValue = function() return selected end }
     end
 
-    -- ── INPUT ──
     function tab:CreateInput(options)
         local callback = options.Callback or function() end
         local placeholder = options.Placeholder or "Type here..."
@@ -1157,10 +1196,10 @@ function Window:CreateTab(options)
         })
         AddCorner(container, 9)
         local stroke = AddStroke(container, C.SectionStroke, 1, 0.4)
-        Create("TextLabel", {
+        local lbl = Create("TextLabel", {
             BackgroundTransparency = 1,
             Text = options.Title or "Input",
-            TextColor3 = C.Label,
+            TextColor3 = C.Label or C.SubText,
             Font = Enum.Font.Gotham,
             TextSize = 12,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -1191,6 +1230,7 @@ function Window:CreateTab(options)
         table.insert(tab.Components, function(newColors)
             container.BackgroundColor3 = newColors.SectionBg
             stroke.Color = newColors.SectionStroke
+            lbl.TextColor3 = newColors.Label or newColors.SubText
             inputBox.BackgroundColor3 = newColors.InputBg
             inputBox.PlaceholderColor3 = newColors.SubText
             inputBox.TextColor3 = newColors.Text
@@ -1198,7 +1238,6 @@ function Window:CreateTab(options)
         return { Get = function() return inputBox.Text end, Set = function(v) inputBox.Text = v end }
     end
 
-    -- ── KEYBIND ──
     function tab:CreateKeybind(options)
         local key = options.Default
         local callback = options.Callback or function() end
@@ -1251,14 +1290,13 @@ function Window:CreateTab(options)
         return { GetKey = function() return key end, SetKey = function(k) key = k; btn.Text = k.Name end }
     end
 
-    -- ── COLOR PICKER (FIX) ──
     function tab:CreateColorPicker(options)
         local color = options.Default or Color3.fromRGB(100,120,255)
         local callback = options.Callback or function() end
         local container = Create("Frame", {
             BackgroundColor3 = C.SectionBg,
             BorderSizePixel = 0,
-            Size = UDim2.new(0.96,0,0,145), -- diperbesar
+            Size = UDim2.new(0.96,0,0,150),
             ZIndex = 4,
             Parent = tab.Scroll
         })
@@ -1267,19 +1305,19 @@ function Window:CreateTab(options)
         local titleLbl = Create("TextLabel", {
             BackgroundTransparency = 1,
             Text = options.Title or "Color",
-            TextColor3 = C.Label,
+            TextColor3 = C.Label or C.SubText,
             Font = Enum.Font.Gotham,
             TextSize = 12,
             TextXAlignment = Enum.TextXAlignment.Left,
             Size = UDim2.new(0.6,0,0,20),
-            Position = UDim2.new(0,12,0,4),
+            Position = UDim2.new(0,12,0,6),
             ZIndex = 5,
             Parent = container
         })
         local preview = Create("Frame", {
             BackgroundColor3 = color,
             BorderSizePixel = 0,
-            Position = UDim2.new(1,-48,0,8),
+            Position = UDim2.new(1,-48,0,10),
             Size = UDim2.new(0,32,0,32),
             ZIndex = 5,
             Parent = container
@@ -1292,12 +1330,12 @@ function Window:CreateTab(options)
         local hueTrackBg = Create("Frame", {
             BackgroundColor3 = Color3.fromRGB(255,255,255),
             BorderSizePixel = 0,
-            Position = UDim2.new(0,12,0,58),
-            Size = UDim2.new(1,-64,0,12),
+            Position = UDim2.new(0,12,0,62),
+            Size = UDim2.new(1,-64,0,14),
             ZIndex = 5,
             Parent = container
         })
-        AddCorner(hueTrackBg, 6)
+        AddCorner(hueTrackBg, 7)
         Create("UIGradient", {
             Color = ColorSequence.new({
                 ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,0)),
@@ -1315,11 +1353,11 @@ function Window:CreateTab(options)
             BorderSizePixel = 0,
             AnchorPoint = Vector2.new(0.5,0.5),
             Position = UDim2.new(h,0,0.5,0),
-            Size = UDim2.new(0,14,0,14),
+            Size = UDim2.new(0,16,0,16),
             ZIndex = 6,
             Parent = hueTrackBg
         })
-        AddCorner(hueKnob, 7)
+        AddCorner(hueKnob, 8)
         AddStroke(hueKnob, C.Stroke, 2, 0.2)
 
         local function refresh()
@@ -1345,11 +1383,11 @@ function Window:CreateTab(options)
                 BackgroundColor3 = C.SliderTrack,
                 BorderSizePixel = 0,
                 Position = UDim2.new(0,32,0,yOff+1),
-                Size = UDim2.new(1,-96,0,10),
+                Size = UDim2.new(1,-96,0,12),
                 ZIndex = 5,
                 Parent = container
             })
-            AddCorner(tr, 5)
+            AddCorner(tr, 6)
             local fl = Create("Frame", {
                 BackgroundColor3 = C.SliderFill,
                 BorderSizePixel = 0,
@@ -1357,7 +1395,7 @@ function Window:CreateTab(options)
                 ZIndex = 6,
                 Parent = tr
             })
-            AddCorner(fl, 5)
+            AddCorner(fl, 6)
             local kn = Create("Frame", {
                 BackgroundColor3 = Color3.fromRGB(255,255,255),
                 BorderSizePixel = 0,
@@ -1370,8 +1408,8 @@ function Window:CreateTab(options)
             AddCorner(kn, 7)
             return tr, fl, kn, labelLbl
         end
-        local satTrack, satFill, satKnob, satLbl = makeMini(80, s, "S")
-        local valTrack, valFill, valKnob, valLbl = makeMini(100, v, "V")
+        local satTrack, satFill, satKnob, satLbl = makeMini(86, s, "S")
+        local valTrack, valFill, valKnob, valLbl = makeMini(108, v, "V")
 
         local draggingHue, draggingSat, draggingVal = false, false, false
         hueTrackBg.InputBegan:Connect(function(input)
@@ -1428,7 +1466,7 @@ function Window:CreateTab(options)
         table.insert(tab.Components, function(newColors)
             container.BackgroundColor3 = newColors.SectionBg
             stroke.Color = newColors.SectionStroke
-            titleLbl.TextColor3 = newColors.Label
+            titleLbl.TextColor3 = newColors.Label or newColors.SubText
             satTrack.BackgroundColor3 = newColors.SliderTrack
             satFill.BackgroundColor3 = newColors.SliderFill
             valTrack.BackgroundColor3 = newColors.SliderTrack
@@ -1437,7 +1475,6 @@ function Window:CreateTab(options)
         return { GetColor = function() return color end, SetColor = function(c) color = c; h,s,v = Color3.toHSV(c); refresh() end }
     end
 
-    -- ── LABEL ──
     function tab:CreateLabel(text, color2)
         local lbl = Create("TextLabel", {
             BackgroundTransparency = 1,
@@ -1456,12 +1493,11 @@ function Window:CreateTab(options)
         return { Set = function(v) lbl.Text = v end, SetColor = function(col) lbl.TextColor3 = col end }
     end
 
-    -- ── SEPARATOR (padding atas) ──
     function tab:CreateSeparator(label)
         local sep = Create("Frame", {
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
-            Size = UDim2.new(0.96,0,0,24), -- tambah tinggi
+            Size = UDim2.new(0.96,0,0,24),
             ZIndex = 4,
             Parent = tab.Scroll
         })
@@ -1506,7 +1542,6 @@ function Window:CreateTab(options)
     return tab
 end
 
--- ── SelectTab ──
 function Window:SelectTab(tab)
     local prevTween = TweenInfo.new(0.18)
     local C = self.Colors
@@ -1526,7 +1561,6 @@ function Window:SelectTab(tab)
     self.ActiveTab = tab
 end
 
--- ── Notification ──
 function Window:Notification(options)
     local C = self.Colors
     local title = options.Title or "Notification"
@@ -1539,7 +1573,7 @@ function Window:Notification(options)
         BorderSizePixel = 0,
         Position = UDim2.new(1,20,1,-88),
         Size = UDim2.new(0,260,0,72),
-        ZIndex = 100,
+        ZIndex = 300,
         Parent = self.Gui
     })
     AddCorner(notif, 10)
@@ -1548,7 +1582,7 @@ function Window:Notification(options)
         BackgroundColor3 = accentColor,
         BorderSizePixel = 0,
         Size = UDim2.new(0,3,1,0),
-        ZIndex = 101,
+        ZIndex = 301,
         Parent = notif
     })
     Create("TextLabel", {
@@ -1560,7 +1594,7 @@ function Window:Notification(options)
         TextXAlignment = Enum.TextXAlignment.Left,
         Size = UDim2.new(1,-22,0,20),
         Position = UDim2.new(0,14,0,10),
-        ZIndex = 101,
+        ZIndex = 301,
         Parent = notif
     })
     Create("TextLabel", {
@@ -1573,7 +1607,7 @@ function Window:Notification(options)
         TextWrapped = true,
         Size = UDim2.new(1,-22,0,30),
         Position = UDim2.new(0,14,0,34),
-        ZIndex = 101,
+        ZIndex = 301,
         Parent = notif
     })
     local progressBg = Create("Frame", {
@@ -1581,7 +1615,7 @@ function Window:Notification(options)
         BorderSizePixel = 0,
         Position = UDim2.new(0,14,1,-6),
         Size = UDim2.new(1,-28,0,2),
-        ZIndex = 101,
+        ZIndex = 301,
         Parent = notif
     })
     AddCorner(progressBg, 1)
@@ -1589,7 +1623,7 @@ function Window:Notification(options)
         BackgroundColor3 = accentColor,
         BorderSizePixel = 0,
         Size = UDim2.new(1,0,1,0),
-        ZIndex = 102,
+        ZIndex = 302,
         Parent = progressBg
     })
     AddCorner(progressFill, 1)
@@ -1607,7 +1641,7 @@ function Window:ToggleMinimize()
     if self.Minimized then
         self._origSize = self.Window.Size
         self._origPos = self.Window.Position
-        Tween(self.Window, ti, { Size = UDim2.new(0,220,0,52), Position = UDim2.new(0,14,1,-70) })
+        Tween(self.Window, ti, { Size = UDim2.new(0,220,0,54), Position = UDim2.new(0,14,1,-72) })
     else
         Tween(self.Window, ti, { Size = self._origSize, Position = self._origPos })
     end
