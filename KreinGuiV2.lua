@@ -319,62 +319,64 @@ local Themes = {
     },
 
     Light = {
-        -- Light theme baru: putih hangat, depth lewat shadow bukan opacity
-        WindowBg          = Color3.fromRGB(246, 246, 250),  -- putih kelabu hangat
-        TitleBar          = Color3.fromRGB(255, 255, 255),   -- putih bersih
-        TitleStroke       = Color3.fromRGB(222, 222, 232),
-        -- Sidebar: abu muda lembut, bukan transparan gelap
-        Sidebar           = Color3.fromRGB(238, 238, 246),
-        SidebarDivider    = Color3.fromRGB(218, 218, 230),
-        SidebarText       = Color3.fromRGB(115, 115, 138),
-        SidebarHover      = Color3.fromRGB(226, 226, 238),
-        SidebarActive     = Color3.fromRGB(225, 228, 248),   -- biru muda sangat lembut
-        SidebarActiveText = Color3.fromRGB(22, 22, 42),
-        -- Teks: hitam nyaman, bukan hitam pekat
-        Text              = Color3.fromRGB(22, 22, 38),
-        SubText           = Color3.fromRGB(130, 130, 152),
-        Label             = Color3.fromRGB(75, 75, 98),
-        -- Accent: indigo tegas agar terlihat jelas di atas putih
-        Accent            = Color3.fromRGB(80, 100, 235),
-        AccentDark        = Color3.fromRGB(60, 80, 210),
-        Danger            = Color3.fromRGB(210, 48, 48),
-        Success           = Color3.fromRGB(34, 168, 88),
-        Warning           = Color3.fromRGB(200, 145, 20),
-        -- Section: putih dengan shadow (via stroke lebih tebal)
+        -- Light theme v2: sidebar GELAP abu-biru (kontras dgn content putih)
+        -- Window: putih bersih sebagai canvas utama
+        WindowBg          = Color3.fromRGB(245, 245, 250),
+        TitleBar          = Color3.fromRGB(255, 255, 255),
+        TitleStroke       = Color3.fromRGB(215, 215, 228),
+        -- Sidebar: abu GELAP — ini yg bikin kontras jelas di screenshot
+        -- Pakai abu kebiruan gelap seperti macOS sidebar di Light mode
+        Sidebar           = Color3.fromRGB(52, 55, 72),      -- gelap! bukan abu muda
+        SidebarDivider    = Color3.fromRGB(68, 72, 92),
+        SidebarText       = Color3.fromRGB(165, 168, 195),
+        SidebarHover      = Color3.fromRGB(65, 68, 88),
+        SidebarActive     = Color3.fromRGB(75, 95, 200),     -- biru accent solid
+        SidebarActiveText = Color3.fromRGB(255, 255, 255),   -- teks putih di atas biru
+        -- Teks di content area: hitam pekat utk kontras maksimal
+        Text              = Color3.fromRGB(18, 18, 32),
+        SubText           = Color3.fromRGB(115, 115, 140),
+        Label             = Color3.fromRGB(65, 65, 88),
+        -- Accent: biru tegas
+        Accent            = Color3.fromRGB(75, 95, 220),
+        AccentDark        = Color3.fromRGB(55, 75, 195),
+        Danger            = Color3.fromRGB(205, 45, 45),
+        Success           = Color3.fromRGB(30, 160, 82),
+        Warning           = Color3.fromRGB(195, 138, 15),
+        -- Content/section: putih murni agar terang & kontras dgn sidebar gelap
         SectionBg         = Color3.fromRGB(255, 255, 255),
-        SectionStroke     = Color3.fromRGB(222, 222, 235),
+        SectionStroke     = Color3.fromRGB(218, 218, 232),
         -- Buttons
-        BtnPrimary        = Color3.fromRGB(80, 100, 235),
-        BtnSecondary      = Color3.fromRGB(232, 232, 244),   -- abu lembut, bukan transparan
-        BtnDanger         = Color3.fromRGB(210, 48, 48),
+        BtnPrimary        = Color3.fromRGB(75, 95, 220),
+        BtnSecondary      = Color3.fromRGB(235, 235, 248),
+        BtnDanger         = Color3.fromRGB(205, 45, 45),
         -- Controls
-        ToggleOff         = Color3.fromRGB(200, 200, 218),
-        ToggleOn          = Color3.fromRGB(34, 168, 88),
-        SliderTrack       = Color3.fromRGB(215, 215, 232),
-        SliderFill        = Color3.fromRGB(80, 100, 235),
+        ToggleOff         = Color3.fromRGB(195, 195, 215),
+        ToggleOn          = Color3.fromRGB(30, 160, 82),
+        SliderTrack       = Color3.fromRGB(210, 210, 230),
+        SliderFill        = Color3.fromRGB(75, 95, 220),
         InputBg           = Color3.fromRGB(252, 252, 255),
         -- Dropdown
         DropdownBg        = Color3.fromRGB(255, 255, 255),
-        DropdownItem      = Color3.fromRGB(245, 245, 252),
+        DropdownItem      = Color3.fromRGB(244, 244, 252),
         -- Notification
         NotifBg           = Color3.fromRGB(255, 255, 255),
         -- Misc
-        Stroke            = Color3.fromRGB(215, 215, 232),
-        -- Profile card
-        ProfileBg         = Color3.fromRGB(232, 232, 244),
-        ProfileHover      = Color3.fromRGB(220, 222, 240),
+        Stroke            = Color3.fromRGB(210, 210, 230),
+        -- Profile card: di sidebar gelap, card sedikit lebih terang dari sidebar
+        ProfileBg         = Color3.fromRGB(65, 68, 88),
+        ProfileHover      = Color3.fromRGB(78, 82, 105),
         -- Popup
         PopupBg           = Color3.fromRGB(255, 255, 255),
-        PopupItem         = Color3.fromRGB(245, 245, 252),
-        -- Traffic lights (sama di semua tema)
+        PopupItem         = Color3.fromRGB(244, 244, 252),
+        -- Traffic lights
         TrafficRed        = Color3.fromRGB(255, 88, 78),
         TrafficYellow     = Color3.fromRGB(255, 192, 58),
         TrafficGreen      = Color3.fromRGB(58, 212, 95),
         -- Progress
-        ProgressBg        = Color3.fromRGB(220, 220, 235),
-        ProgressFill      = Color3.fromRGB(80, 100, 235),
+        ProgressBg        = Color3.fromRGB(215, 215, 232),
+        ProgressFill      = Color3.fromRGB(75, 95, 220),
         -- Search
-        SearchBg          = Color3.fromRGB(248, 248, 255),
+        SearchBg          = Color3.fromRGB(68, 72, 92),      -- search bg ikut sidebar gelap
     },
 
     -- Bonus: Ocean tema (dark teal vibes)
@@ -1006,6 +1008,106 @@ function Window.new(options)
         ZIndex                 = 3,
         Parent                 = self.Window,
     })
+
+    -- ── RESIZE HANDLE (pojok kanan bawah) ──
+    -- Ukuran minimum dan maksimum window
+    local MIN_W, MIN_H = 500, 360
+    local MAX_W, MAX_H = 1100, 800
+
+    -- Container handle: area 32x32 di pojok kanan bawah
+    local resizeHandle = Create("Frame", {
+        BackgroundTransparency = 1,
+        BorderSizePixel        = 0,
+        AnchorPoint            = Vector2.new(1, 1),
+        Position               = UDim2.new(1, 0, 1, 0),
+        Size                   = UDim2.new(0, 32, 0, 32),
+        ZIndex                 = 15,
+        Parent                 = self.Window,
+    })
+
+    -- Ikon resize: tiga garis diagonal bertingkat (macOS style)
+    for i = 1, 3 do
+        local offset = i * 7
+        Create("Frame", {
+            BackgroundColor3 = self.Colors.SubText,
+            BackgroundTransparency = 0.4,
+            BorderSizePixel  = 0,
+            AnchorPoint      = Vector2.new(1, 1),
+            -- Diagonal dari kanan bawah ke kiri atas
+            Position         = UDim2.new(1, -4, 1, -4),
+            Size             = UDim2.new(0, offset, 0, 1.5),
+            Rotation         = -45,
+            ZIndex           = 16,
+            Parent           = resizeHandle,
+        })
+    end
+
+    -- Glow dot di sudut
+    local resizeDot = Create("Frame", {
+        BackgroundColor3       = self.Colors.Accent,
+        BackgroundTransparency = 0.5,
+        BorderSizePixel        = 0,
+        AnchorPoint            = Vector2.new(1, 1),
+        Position               = UDim2.new(1, -5, 1, -5),
+        Size                   = UDim2.new(0, 5, 0, 5),
+        ZIndex                 = 16,
+        Parent                 = resizeHandle,
+    })
+    AddCorner(resizeDot, 3)
+    RegisterColor(registry, resizeDot, "BackgroundColor3", "Accent")
+
+    -- Tombol invisible di atas semua untuk input
+    local resizeBtn = Create("TextButton", {
+        BackgroundTransparency = 1,
+        BorderSizePixel        = 0,
+        Text                   = "",
+        Size                   = UDim2.new(1, 0, 1, 0),
+        ZIndex                 = 17,
+        AutoButtonColor        = false,
+        Parent                 = resizeHandle,
+    })
+
+    -- Hover: tampilkan glow
+    local rHoverTi = TweenInfo.new(0.15)
+    resizeBtn.MouseEnter:Connect(function()
+        Tween(resizeDot, rHoverTi, { BackgroundTransparency = 0, Size = UDim2.new(0, 7, 0, 7) })
+    end)
+    resizeBtn.MouseLeave:Connect(function()
+        Tween(resizeDot, rHoverTi, { BackgroundTransparency = 0.5, Size = UDim2.new(0, 5, 0, 5) })
+    end)
+
+    -- Drag resize logic
+    local resizing     = false
+    local resizeStart  = Vector2.new(0, 0)
+    local resizeInitW  = 0
+    local resizeInitH  = 0
+
+    resizeBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            resizing    = true
+            resizeStart = Vector2.new(input.Position.X, input.Position.Y)
+            resizeInitW = self.Window.AbsoluteSize.X
+            resizeInitH = self.Window.AbsoluteSize.Y
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            resizing = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if resizing and (
+            input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch
+        ) then
+            local delta = Vector2.new(input.Position.X, input.Position.Y) - resizeStart
+            local newW  = math.clamp(resizeInitW + delta.X, MIN_W, MAX_W)
+            local newH  = math.clamp(resizeInitH + delta.Y, MIN_H, MAX_H)
+            self.Window.Size = UDim2.new(0, newW, 0, newH)
+        end
+    end)
 
     -- ── OPEN ANIMATION ──
     self.Window.Size                   = UDim2.new(0, 760, 0, 0)
@@ -1886,22 +1988,30 @@ function Window:CreateTab(options)
         }
     end
 
-    -- ── COLOR PICKER ──
+    -- ── COLOR PICKER (2D SV Square + Hue Bar + Batal/Ubah) ──
+    -- Seperti gambar referensi: kotak SV 2D di atas, hue bar horizontal di bawah,
+    -- preview warna lama vs baru, tombol Batal & Ubah
     function tab:CreateColorPicker(options)
-        local color = options.Default  or Color3.fromRGB(100, 120, 255)
-        local cb    = options.Callback or function() end
+        local initColor = options.Default  or Color3.fromRGB(100, 120, 255)
+        local cb        = options.Callback or function() end
 
-        local container = Create("Frame", {
+        -- State
+        local h, s, v    = Color3.toHSV(initColor)
+        local pendingColor = initColor   -- warna yg sedang di-preview (belum dikonfirm)
+        local confirmedColor = initColor -- warna yg sudah dikonfirm
+
+        -- Row tombol expand di scroll
+        local rowBtn = Create("Frame", {
             BackgroundColor3 = window.Colors.SectionBg,
             BorderSizePixel  = 0,
-            Size             = UDim2.new(0.96, 0, 0, 148),
+            Size             = UDim2.new(0.96, 0, 0, 46),
             ZIndex           = 4,
             Parent           = tab.Scroll,
         })
-        AddCorner(container, 10)
-        local cpStroke = AddStroke(container, window.Colors.SectionStroke, 1, 0.4)
-        RegisterColor(registry, container, "BackgroundColor3", "SectionBg")
-        RegisterColor(registry, cpStroke,  "Color",            "SectionStroke")
+        AddCorner(rowBtn, 10)
+        local rbStroke = AddStroke(rowBtn, window.Colors.SectionStroke, 1, 0.4)
+        RegisterColor(registry, rowBtn,   "BackgroundColor3", "SectionBg")
+        RegisterColor(registry, rbStroke, "Color",            "SectionStroke")
 
         local cpTitle = Create("TextLabel", {
             BackgroundTransparency = 1,
@@ -1910,40 +2020,154 @@ function Window:CreateTab(options)
             Font           = Enum.Font.Gotham,
             TextSize       = 12,
             TextXAlignment = Enum.TextXAlignment.Left,
-            Size           = UDim2.new(0.6, 0, 0, 20),
-            Position       = UDim2.new(0, 12, 0, 6),
+            Size           = UDim2.new(0.6, 0, 1, 0),
+            Position       = UDim2.new(0, 12, 0, 0),
             ZIndex         = 5,
-            Parent         = container,
+            Parent         = rowBtn,
         })
         RegisterColor(registry, cpTitle, "TextColor3", "Label")
 
-        local preview = Create("Frame", {
-            BackgroundColor3 = color,
+        -- Swatch kecil yang menunjukkan warna terkonfirmasi
+        local swatchSmall = Create("Frame", {
+            BackgroundColor3 = confirmedColor,
             BorderSizePixel  = 0,
-            Position         = UDim2.new(1, -52, 0, 8),
-            Size             = UDim2.new(0, 36, 0, 36),
+            AnchorPoint      = Vector2.new(1, 0.5),
+            Position         = UDim2.new(1, -44, 0.5, 0),
+            Size             = UDim2.new(0, 24, 0, 24),
             ZIndex           = 5,
-            Parent           = container,
+            Parent           = rowBtn,
         })
-        AddCorner(preview, 7)
-        AddStroke(preview, window.Colors.Stroke, 1, 0.4)
+        AddCorner(swatchSmall, 6)
+        AddStroke(swatchSmall, window.Colors.Stroke, 1, 0.4)
 
-        local h, s, v = Color3.toHSV(color)
-        local function refresh()
-            color = Color3.fromHSV(h, s, v)
-            preview.BackgroundColor3 = color
-            cb(color)
-        end
+        -- Tombol expand/collapse
+        local expandBtn = Create("TextButton", {
+            BackgroundTransparency = 1,
+            BorderSizePixel        = 0,
+            Text                   = "▾",
+            TextColor3             = window.Colors.SubText,
+            Font                   = Enum.Font.GothamBold,
+            TextSize               = 12,
+            AnchorPoint            = Vector2.new(1, 0.5),
+            Position               = UDim2.new(1, -14, 0.5, 0),
+            Size                   = UDim2.new(0, 20, 1, 0),
+            AutoButtonColor        = false,
+            ZIndex                 = 5,
+            Parent                 = rowBtn,
+        })
 
-        local hueTrack = Create("Frame", {
+        -- Panel picker (di-parent ke Gui supaya tidak di-clip scroll)
+        local panelW = 280
+        local panelH = 320
+        local panel = Create("Frame", {
+            BackgroundColor3 = window.Colors.SectionBg,
+            BorderSizePixel  = 0,
+            Size             = UDim2.new(0, panelW, 0, panelH),
+            Visible          = false,
+            ZIndex           = 55,
+            Parent           = window.Gui,
+        })
+        AddCorner(panel, 12)
+        AddStroke(panel, window.Colors.SectionStroke, 1.5, 0.3)
+        AddShadow(panel, 40, 0.45)
+        RegisterColor(registry, panel, "BackgroundColor3", "SectionBg")
+
+        local isOpen   = false
+        local SQ_PAD   = 12
+        local SQ_W     = panelW - SQ_PAD * 2   -- 256
+        local SQ_H     = 170
+
+        -- ── SV SQUARE ──
+        -- Layer 1: warna hue murni (diupdate saat hue berubah)
+        local svBase = Create("Frame", {
+            BackgroundColor3 = Color3.fromHSV(h, 1, 1),
+            BorderSizePixel  = 0,
+            Position         = UDim2.new(0, SQ_PAD, 0, SQ_PAD + 8),
+            Size             = UDim2.new(0, SQ_W, 0, SQ_H),
+            ZIndex           = 56,
+            Parent           = panel,
+        })
+        AddCorner(svBase, 6)
+
+        -- Layer 2: gradien putih (saturation) dari kiri ke kanan
+        Create("UIGradient", {
+            Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(255,255,255)),
+            }),
+            Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 0),    -- putih opak di kiri
+                NumberSequenceKeypoint.new(1, 1),    -- transparan di kanan
+            }),
+            Rotation = 0,
+            Parent   = svBase,
+        })
+
+        -- Layer 3: gradien hitam (value) dari bawah ke atas
+        local svDarkOverlay = Create("Frame", {
+            BackgroundColor3 = Color3.fromRGB(0,0,0),
+            BackgroundTransparency = 0,
+            BorderSizePixel  = 0,
+            Size             = UDim2.new(1, 0, 1, 0),
+            ZIndex           = 57,
+            Parent           = svBase,
+        })
+        AddCorner(svDarkOverlay, 6)
+        Create("UIGradient", {
+            Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 1),    -- transparan di atas
+                NumberSequenceKeypoint.new(1, 0),    -- hitam opak di bawah
+            }),
+            Rotation = 90,
+            Parent   = svDarkOverlay,
+        })
+
+        -- Knob SV (lingkaran putih berisi warna selected)
+        local svKnob = Create("Frame", {
             BackgroundColor3 = Color3.fromRGB(255,255,255),
             BorderSizePixel  = 0,
-            Position         = UDim2.new(0, 12, 0, 56),
-            Size             = UDim2.new(1, -64, 0, 12),
-            ZIndex           = 5,
-            Parent           = container,
+            AnchorPoint      = Vector2.new(0.5, 0.5),
+            Position         = UDim2.new(s, 0, 1 - v, 0),
+            Size             = UDim2.new(0, 18, 0, 18),
+            ZIndex           = 59,
+            Parent           = svBase,
         })
-        AddCorner(hueTrack, 6)
+        AddCorner(svKnob, 9)
+        AddStroke(svKnob, Color3.fromRGB(255,255,255), 2.5, 0)
+
+        local svKnobInner = Create("Frame", {
+            BackgroundColor3 = Color3.fromHSV(h, s, v),
+            BorderSizePixel  = 0,
+            AnchorPoint      = Vector2.new(0.5, 0.5),
+            Position         = UDim2.new(0.5, 0, 0.5, 0),
+            Size             = UDim2.new(0, 10, 0, 10),
+            ZIndex           = 60,
+            Parent           = svKnob,
+        })
+        AddCorner(svKnobInner, 5)
+
+        -- Button transparan di atas sv square untuk input drag
+        local svHitbox = Create("TextButton", {
+            BackgroundTransparency = 1,
+            BorderSizePixel        = 0,
+            Text                   = "",
+            Size                   = UDim2.new(1, 0, 1, 0),
+            ZIndex                 = 58,
+            AutoButtonColor        = false,
+            Parent                 = svBase,
+        })
+
+        -- ── HUE BAR ──
+        local hueY = SQ_PAD + 8 + SQ_H + 12
+        local hueBar = Create("Frame", {
+            BackgroundColor3 = Color3.fromRGB(255,255,255),
+            BorderSizePixel  = 0,
+            Position         = UDim2.new(0, SQ_PAD, 0, hueY),
+            Size             = UDim2.new(0, SQ_W, 0, 14),
+            ZIndex           = 56,
+            Parent           = panel,
+        })
+        AddCorner(hueBar, 7)
         Create("UIGradient", {
             Color = ColorSequence.new({
                 ColorSequenceKeypoint.new(0/6, Color3.fromRGB(255,   0,   0)),
@@ -1955,7 +2179,7 @@ function Window:CreateTab(options)
                 ColorSequenceKeypoint.new(6/6, Color3.fromRGB(255,   0,   0)),
             }),
             Rotation = 0,
-            Parent   = hueTrack,
+            Parent   = hueBar,
         })
 
         local hueKnob = Create("Frame", {
@@ -1963,109 +2187,320 @@ function Window:CreateTab(options)
             BorderSizePixel  = 0,
             AnchorPoint      = Vector2.new(0.5, 0.5),
             Position         = UDim2.new(h, 0, 0.5, 0),
-            Size             = UDim2.new(0, 14, 0, 14),
-            ZIndex           = 6,
-            Parent           = hueTrack,
+            Size             = UDim2.new(0, 16, 0, 22),
+            ZIndex           = 57,
+            Parent           = hueBar,
         })
-        AddCorner(hueKnob, 7)
+        AddCorner(hueKnob, 4)
         AddStroke(hueKnob, Color3.fromRGB(255,255,255), 2, 0.1)
+        AddShadow(hueKnob, 6, 0.65)
 
-        local function makeMini(yOff, val0, lbl)
-            local lblEl = Create("TextLabel", {
-                BackgroundTransparency = 1,
-                Text           = lbl,
-                TextColor3     = window.Colors.SubText,
-                Font           = Enum.Font.GothamBold,
-                TextSize       = 9,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                Size           = UDim2.new(0, 16, 0, 12),
-                Position       = UDim2.new(0, 12, 0, yOff),
-                ZIndex         = 5,
-                Parent         = container,
-            })
-            RegisterColor(registry, lblEl, "TextColor3", "SubText")
-            local tr = Create("Frame", {
-                BackgroundColor3 = window.Colors.SliderTrack,
-                BorderSizePixel  = 0,
-                Position         = UDim2.new(0, 30, 0, yOff + 2),
-                Size             = UDim2.new(1, -90, 0, 8),
-                ZIndex           = 5,
-                Parent           = container,
-            })
-            AddCorner(tr, 4)
-            RegisterColor(registry, tr, "BackgroundColor3", "SliderTrack")
-            local fl = Create("Frame", {
-                BackgroundColor3 = window.Colors.SliderFill,
-                BorderSizePixel  = 0,
-                Size             = UDim2.new(val0, 0, 1, 0),
-                ZIndex           = 6,
-                Parent           = tr,
-            })
-            AddCorner(fl, 4)
-            RegisterColor(registry, fl, "BackgroundColor3", "SliderFill")
-            local kn = Create("Frame", {
-                BackgroundColor3 = Color3.fromRGB(255,255,255),
-                BorderSizePixel  = 0,
-                AnchorPoint      = Vector2.new(0.5, 0.5),
-                Position         = UDim2.new(val0, 0, 0.5, 0),
-                Size             = UDim2.new(0, 12, 0, 12),
-                ZIndex           = 7,
-                Parent           = tr,
-            })
-            AddCorner(kn, 6)
-            return tr, fl, kn
+        local hueHitbox = Create("TextButton", {
+            BackgroundTransparency = 1,
+            BorderSizePixel        = 0,
+            Text                   = "",
+            Size                   = UDim2.new(1, 0, 1, 0),
+            ZIndex                 = 58,
+            AutoButtonColor        = false,
+            Parent                 = hueBar,
+        })
+
+        -- ── PREVIEW SWATCH (lama vs baru) ──
+        local previewY = hueY + 14 + 12
+        local swatchW  = (SQ_W - 8) / 2
+
+        -- Label "Sebelum"
+        Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Text           = "Sebelum",
+            TextColor3     = window.Colors.SubText,
+            Font           = Enum.Font.Gotham,
+            TextSize       = 9,
+            Size           = UDim2.new(0, swatchW, 0, 12),
+            Position       = UDim2.new(0, SQ_PAD, 0, previewY),
+            ZIndex         = 56,
+            Parent         = panel,
+        })
+        Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Text           = "Baru",
+            TextColor3     = window.Colors.SubText,
+            Font           = Enum.Font.Gotham,
+            TextSize       = 9,
+            Size           = UDim2.new(0, swatchW, 0, 12),
+            Position       = UDim2.new(0, SQ_PAD + swatchW + 8, 0, previewY),
+            ZIndex         = 56,
+            Parent         = panel,
+        })
+
+        -- Swatch lama (warna terkonfirmasi)
+        local swOld = Create("Frame", {
+            BackgroundColor3 = confirmedColor,
+            BorderSizePixel  = 0,
+            Position         = UDim2.new(0, SQ_PAD, 0, previewY + 14),
+            Size             = UDim2.new(0, swatchW, 0, 28),
+            ZIndex           = 56,
+            Parent           = panel,
+        })
+        AddCorner(swOld, 6)
+        AddStroke(swOld, window.Colors.Stroke, 1, 0.4)
+
+        -- Swatch baru (warna pending)
+        local swNew = Create("Frame", {
+            BackgroundColor3 = pendingColor,
+            BorderSizePixel  = 0,
+            Position         = UDim2.new(0, SQ_PAD + swatchW + 8, 0, previewY + 14),
+            Size             = UDim2.new(0, swatchW, 0, 28),
+            ZIndex           = 56,
+            Parent           = panel,
+        })
+        AddCorner(swNew, 6)
+        AddStroke(swNew, window.Colors.Stroke, 1, 0.4)
+
+        -- ── HEX DISPLAY ──
+        local hexY = previewY + 14 + 28 + 10
+        local hexBg = Create("Frame", {
+            BackgroundColor3 = window.Colors.InputBg,
+            BorderSizePixel  = 0,
+            Position         = UDim2.new(0, SQ_PAD, 0, hexY),
+            Size             = UDim2.new(0, SQ_W, 0, 26),
+            ZIndex           = 56,
+            Parent           = panel,
+        })
+        AddCorner(hexBg, 6)
+        AddStroke(hexBg, window.Colors.Stroke, 1, 0.4)
+        RegisterColor(registry, hexBg, "BackgroundColor3", "InputBg")
+
+        Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Text       = "#",
+            TextColor3 = window.Colors.SubText,
+            Font       = Enum.Font.GothamBold,
+            TextSize   = 11,
+            Size       = UDim2.new(0, 18, 1, 0),
+            Position   = UDim2.new(0, 8, 0, 0),
+            ZIndex     = 57,
+            Parent     = hexBg,
+        })
+
+        local hexLabel = Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Text           = "",
+            TextColor3     = window.Colors.Text,
+            Font           = Enum.Font.GothamBold,
+            TextSize       = 11,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Size           = UDim2.new(1, -28, 1, 0),
+            Position       = UDim2.new(0, 24, 0, 0),
+            ZIndex         = 57,
+            Parent         = hexBg,
+        })
+        RegisterColor(registry, hexLabel, "TextColor3", "Text")
+
+        local function toHex(c)
+            return string.format("%02X%02X%02X",
+                math.floor(c.R * 255 + 0.5),
+                math.floor(c.G * 255 + 0.5),
+                math.floor(c.B * 255 + 0.5)
+            )
         end
 
-        local satTr, satFl, satKn = makeMini(82, s, "S")
-        local valTr, valFl, valKn = makeMini(102, v, "V")
+        -- ── TOMBOL BATAL & UBAH ──
+        local btnY   = hexY + 26 + 10
+        local btnW   = (SQ_W - 8) / 2
 
-        local dH, dS, dV = false, false, false
-        local function clampDrag(input, track)
-            return math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+        -- Tombol Batal
+        local batalBtn = Create("TextButton", {
+            BackgroundColor3 = window.Colors.BtnSecondary,
+            BorderSizePixel  = 0,
+            Text             = "Batal",
+            TextColor3       = window.Colors.SubText,
+            Font             = Enum.Font.GothamBold,
+            TextSize         = 12,
+            Position         = UDim2.new(0, SQ_PAD, 0, btnY),
+            Size             = UDim2.new(0, btnW, 0, 34),
+            AutoButtonColor  = false,
+            ZIndex           = 56,
+            Parent           = panel,
+        })
+        AddCorner(batalBtn, 8)
+        AddStroke(batalBtn, window.Colors.Stroke, 1, 0.4)
+        RegisterColor(registry, batalBtn, "BackgroundColor3", "BtnSecondary")
+        RegisterColor(registry, batalBtn, "TextColor3",       "SubText")
+        AddRipple(batalBtn, window.Colors.SubText)
+
+        -- Tombol Ubah
+        local ubahBtn = Create("TextButton", {
+            BackgroundColor3 = window.Colors.BtnPrimary,
+            BorderSizePixel  = 0,
+            Text             = "Ubah",
+            TextColor3       = Color3.fromRGB(255,255,255),
+            Font             = Enum.Font.GothamBold,
+            TextSize         = 12,
+            Position         = UDim2.new(0, SQ_PAD + btnW + 8, 0, btnY),
+            Size             = UDim2.new(0, btnW, 0, 34),
+            AutoButtonColor  = false,
+            ZIndex           = 56,
+            Parent           = panel,
+        })
+        AddCorner(ubahBtn, 8)
+        RegisterColor(registry, ubahBtn, "BackgroundColor3", "BtnPrimary")
+        AddRipple(ubahBtn, Color3.fromRGB(255,255,255))
+
+        -- ── REFRESH LOGIC ──
+        local function updateSvKnob()
+            svKnob.Position      = UDim2.new(s, 0, 1 - v, 0)
+            svKnobInner.BackgroundColor3 = Color3.fromHSV(h, s, v)
+            pendingColor         = Color3.fromHSV(h, s, v)
+            swNew.BackgroundColor3 = pendingColor
+            hexLabel.Text          = toHex(pendingColor)
+            svBase.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
         end
+        updateSvKnob()
 
-        hueTrack.InputBegan:Connect(function(i)
+        -- ── DRAG SV ──
+        local draggingSV = false
+        local function onSvInput(pos)
+            local rel = pos - svBase.AbsolutePosition
+            s = math.clamp(rel.X / svBase.AbsoluteSize.X, 0, 1)
+            v = math.clamp(1 - rel.Y / svBase.AbsoluteSize.Y, 0, 1)
+            updateSvKnob()
+        end
+        svHitbox.InputBegan:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1
             or i.UserInputType == Enum.UserInputType.Touch then
-                dH = true; h = clampDrag(i, hueTrack); hueKnob.Position = UDim2.new(h,0,0.5,0); refresh()
+                draggingSV = true
+                onSvInput(Vector2.new(i.Position.X, i.Position.Y))
             end
         end)
-        satTr.InputBegan:Connect(function(i)
+
+        -- ── DRAG HUE ──
+        local draggingHue = false
+        local function onHueInput(pos)
+            local rel = pos.X - hueBar.AbsolutePosition.X
+            h = math.clamp(rel / hueBar.AbsoluteSize.X, 0, 1)
+            hueKnob.Position = UDim2.new(h, 0, 0.5, 0)
+            updateSvKnob()
+        end
+        hueHitbox.InputBegan:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1
             or i.UserInputType == Enum.UserInputType.Touch then
-                dS = true; s = clampDrag(i, satTr); satKn.Position = UDim2.new(s,0,0.5,0); satFl.Size = UDim2.new(s,0,1,0); refresh()
+                draggingHue = true
+                onHueInput(Vector2.new(i.Position.X, i.Position.Y))
             end
         end)
-        valTr.InputBegan:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseButton1
-            or i.UserInputType == Enum.UserInputType.Touch then
-                dV = true; v = clampDrag(i, valTr); valKn.Position = UDim2.new(v,0,0.5,0); valFl.Size = UDim2.new(v,0,1,0); refresh()
-            end
-        end)
+
         UserInputService.InputEnded:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1
             or i.UserInputType == Enum.UserInputType.Touch then
-                dH = false; dS = false; dV = false
+                draggingSV  = false
+                draggingHue = false
             end
         end)
         UserInputService.InputChanged:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseMovement
             or i.UserInputType == Enum.UserInputType.Touch then
-                if dH then h = clampDrag(i, hueTrack); hueKnob.Position = UDim2.new(h,0,0.5,0); refresh()
-                elseif dS then s = clampDrag(i, satTr); satKn.Position = UDim2.new(s,0,0.5,0); satFl.Size = UDim2.new(s,0,1,0); refresh()
-                elseif dV then v = clampDrag(i, valTr); valKn.Position = UDim2.new(v,0,0.5,0); valFl.Size = UDim2.new(v,0,1,0); refresh()
+                if draggingSV  then onSvInput(Vector2.new(i.Position.X, i.Position.Y))  end
+                if draggingHue then onHueInput(Vector2.new(i.Position.X, i.Position.Y)) end
+            end
+        end)
+
+        -- ── TOMBOL LOGIC ──
+        batalBtn.MouseButton1Click:Connect(function()
+            -- Reset ke warna terkonfirmasi, tutup panel
+            h, s, v = Color3.toHSV(confirmedColor)
+            pendingColor = confirmedColor
+            updateSvKnob()
+            isOpen = false
+            Tween(panel, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
+                Size = UDim2.new(0, panelW, 0, 0),
+                BackgroundTransparency = 1,
+            })
+            task.delay(0.22, function() panel.Visible = false end)
+            Tween(expandBtn, TweenInfo.new(0.2), { Rotation = 0 })
+        end)
+
+        ubahBtn.MouseButton1Click:Connect(function()
+            -- Konfirmasi warna baru, fire callback, tutup panel
+            confirmedColor = pendingColor
+            swOld.BackgroundColor3   = confirmedColor
+            swatchSmall.BackgroundColor3 = confirmedColor
+            cb(confirmedColor)
+            isOpen = false
+            Tween(panel, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
+                Size = UDim2.new(0, panelW, 0, 0),
+                BackgroundTransparency = 1,
+            })
+            task.delay(0.22, function() panel.Visible = false end)
+            Tween(expandBtn, TweenInfo.new(0.2), { Rotation = 0 })
+        end)
+
+        -- ── EXPAND/COLLAPSE ──
+        local function openPanel()
+            local absPos  = rowBtn.AbsolutePosition
+            local absSize = rowBtn.AbsoluteSize
+            -- Posisi panel: tepat di bawah row, rata kiri, atau flip ke atas jika terlalu bawah
+            local screenH  = window.Gui.AbsoluteSize.Y
+            local spaceBelow = screenH - (absPos.Y + absSize.Y)
+            local posY
+            if spaceBelow >= panelH + 8 then
+                posY = absPos.Y + absSize.Y + 6
+            else
+                posY = absPos.Y - panelH - 6
+            end
+            panel.Position               = UDim2.new(0, absPos.X, 0, posY + 20)
+            panel.Size                   = UDim2.new(0, panelW, 0, 0)
+            panel.BackgroundTransparency = 1
+            panel.Visible                = true
+            Tween(panel, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                Size                   = UDim2.new(0, panelW, 0, panelH),
+                Position               = UDim2.new(0, absPos.X, 0, posY),
+                BackgroundTransparency = 0,
+            })
+            Tween(expandBtn, TweenInfo.new(0.2), { Rotation = 180 })
+        end
+
+        local function closePanel()
+            Tween(panel, TweenInfo.new(0.18, Enum.EasingStyle.Quart), {
+                Size = UDim2.new(0, panelW, 0, 0),
+                BackgroundTransparency = 1,
+            })
+            task.delay(0.2, function() panel.Visible = false end)
+            Tween(expandBtn, TweenInfo.new(0.2), { Rotation = 0 })
+        end
+
+        expandBtn.MouseButton1Click:Connect(function()
+            isOpen = not isOpen
+            if isOpen then openPanel() else closePanel() end
+        end)
+
+        -- Tutup saat klik di luar panel
+        UserInputService.InputBegan:Connect(function(input)
+            if isOpen and input.UserInputType == Enum.UserInputType.MouseButton1 then
+                local pos   = input.Position
+                local pAbs  = panel.AbsolutePosition
+                local pSize = panel.AbsoluteSize
+                local rAbs  = rowBtn.AbsolutePosition
+                local rSize = rowBtn.AbsoluteSize
+                local inP = pos.X >= pAbs.X and pos.X <= pAbs.X + pSize.X
+                         and pos.Y >= pAbs.Y and pos.Y <= pAbs.Y + pSize.Y
+                local inR = pos.X >= rAbs.X and pos.X <= rAbs.X + rSize.X
+                         and pos.Y >= rAbs.Y and pos.Y <= rAbs.Y + rSize.Y
+                if not inP and not inR then
+                    isOpen = false; closePanel()
                 end
             end
         end)
 
         return {
-            GetColor = function() return color end,
+            GetColor = function() return confirmedColor end,
             SetColor = function(c)
-                color = c; h, s, v = Color3.toHSV(c)
-                hueKnob.Position = UDim2.new(h,0,0.5,0)
-                satKn.Position = UDim2.new(s,0,0.5,0); satFl.Size = UDim2.new(s,0,1,0)
-                valKn.Position = UDim2.new(v,0,0.5,0); valFl.Size = UDim2.new(v,0,1,0)
-                preview.BackgroundColor3 = c
+                confirmedColor = c; pendingColor = c
+                h, s, v = Color3.toHSV(c)
+                updateSvKnob()
+                swOld.BackgroundColor3       = c
+                swNew.BackgroundColor3       = c
+                swatchSmall.BackgroundColor3 = c
             end,
         }
     end
@@ -2806,3 +3241,113 @@ end
 Library.Themes = Themes
 
 return Library
+
+--[[
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  USAGE EXAMPLE — KreinGuiV3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+local GUI = loadstring(...)()   -- atau require(MODULE_ID)
+
+local win = GUI.CreateWindow({
+    Title     = "MyApp",
+    Subtitle  = "v3.0",
+    Icon      = "⚡",
+    Theme     = "Dark",          -- "Dark" | "Light" | "Ocean"
+    ConfigKey = "MyApp_Config",  -- key untuk SaveConfig/LoadConfig
+})
+
+local tab1 = win:CreateTab({ Title = "Home",     Icon = "🏠" })
+local tab2 = win:CreateTab({ Title = "Settings", Icon = "⚙" })
+local tab3 = win:CreateTab({ Title = "About",    Icon = "ℹ" })
+
+-- Badge
+win:SetTabBadge(tab1, 5)  -- tampilkan "5" di pojok tab Home
+
+-- Section
+local sec = tab1:CreateSection("Player Settings")
+
+-- Toggle
+local myToggle = tab1:CreateToggle({
+    Title     = "God Mode",
+    Default   = false,
+    ConfigKey = "godmode",          -- disimpan ke config
+    Tooltip   = "Toggle invincibility",
+    Callback  = function(v)
+        print("GodMode:", v)
+    end,
+})
+
+-- Slider
+local mySlider = tab1:CreateSlider({
+    Title     = "Speed",
+    Min       = 1, Max = 100,
+    Default   = 16,
+    Suffix    = " stud/s",
+    ConfigKey = "speed",
+    Callback  = function(v)
+        print("Speed:", v)
+    end,
+})
+
+-- Dropdown
+local myDD = tab1:CreateDropdown({
+    Title    = "Team",
+    Items    = { "Red", "Blue", "Green" },
+    Default  = "Red",
+    ConfigKey = "team",
+    Callback = function(v) print("Team:", v) end,
+})
+
+-- Progress bar
+local progress = tab2:CreateProgressBar({
+    Title   = "Loading Assets",
+    Default = 0,
+    Suffix  = "%",
+})
+-- Animasi dari 0 ke 80 dalam 2 detik:
+progress:Animate(0, 80, 2)
+
+-- Toggle Group
+local mode = tab2:CreateToggleGroup({
+    Title    = "Game Mode",
+    Items    = { "Normal", "Hard", "Insane" },
+    Default  = "Normal",
+    ConfigKey = "gamemode",
+    Callback = function(v) print("Mode:", v) end,
+})
+
+-- Accent color picker
+tab2:CreateAccentPicker({
+    Title    = "Accent Color",
+    Callback = function(c) print("New accent:", c) end,
+})
+
+-- Confirm dialog
+tab3:CreateButton("Reset Config", function()
+    win:ConfirmDialog({
+        Title      = "Reset Config",
+        Message    = "This will delete all saved settings. Continue?",
+        ConfirmText = "Reset",
+        Danger     = true,
+        OnConfirm  = function()
+            win:Notification({ Title="Reset", Description="Config cleared.", Type="danger", Duration=3 })
+        end,
+        OnCancel   = function()
+            win:Notification({ Title="Cancelled", Description="Nothing changed.", Type="info", Duration=2 })
+        end,
+    })
+end, "danger")
+
+-- Save/Load config
+tab3:CreateButton("Save Config", function()
+    win:SaveConfig()
+    win:Notification({ Title="Saved!", Description="Config saved to disk.", Type="success" })
+end)
+tab3:CreateButton("Load Config", function()
+    win:LoadConfig()
+    win:Notification({ Title="Loaded!", Description="Config applied.", Type="success" })
+end)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+--]]
