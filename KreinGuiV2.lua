@@ -91,18 +91,21 @@ end
 -- ══════════════════════════════════════════
 --  SOUND SYSTEM
 -- ══════════════════════════════════════════
+local _soundService = game:GetService("SoundService")
 local _sound = Instance.new("Sound")
-_sound.SoundId      = "rbxassetid://3359534883"
-_sound.Volume       = 0.35
+_sound.SoundId            = "rbxassetid://6026984224"  -- UI click clean & modern
+_sound.Volume             = 0.5
 _sound.RollOffMaxDistance = 0
-_sound.Parent       = game:GetService("SoundService")
+_sound.Parent             = _soundService
+
+local _soundEnabled = true  -- guard: matikan sementara saat cleanup
 
 local function PlayClick()
-    -- Clone & play agar bisa overlap (klik cepat tidak ke-cancel)
+    if not _soundEnabled then return end
     local s = _sound:Clone()
-    s.Parent = game:GetService("SoundService")
+    s.Parent = _soundService
     s:Play()
-    game:GetService("Debris"):AddItem(s, 2)
+    game:GetService("Debris"):AddItem(s, 1.5)
 end
 
 -- Hook otomatis ke semua TextButton yang dibuat lewat Create()
@@ -1141,6 +1144,107 @@ function Window.new(options)
         end
     end)
 
+    -- ── ANIMATED NEON BORDER ──
+    -- Dua segmen neon (ungu + biru) yang berputar mengelilingi window
+    -- Teknik: ImageLabel dengan gradient, diputar via UIGradient offset bergerak
+    -- Implementasi: 4 Frame tipis (atas/bawah/kiri/kanan) + gradient animasi offset
+
+    -- Container border — di luar window, tidak di-clip
+    local borderContainer = Create("Frame", {
+        BackgroundTransparency = 1,
+        BorderSizePixel        = 0,
+        AnchorPoint            = Vector2.new(0.5, 0.5),
+        Position               = UDim2.new(0.5, 0, 0.5, 0),
+        Size                   = UDim2.new(1, 6, 1, 6),
+        ZIndex                 = 1,
+        Parent                 = self.Window,
+    })
+
+    local BORDER_T = 2.5  -- ketebalan border
+    local BORDER_R = 14   -- corner radius
+
+    -- Warna neon cycling: ungu → biru → cyan → ungu
+    local neonColors = {
+        Color3.fromRGB(160,  80, 255),  -- purple
+        Color3.fromRGB( 80, 140, 255),  -- blue
+        Color3.fromRGB( 40, 200, 255),  -- cyan
+        Color3.fromRGB(160,  80, 255),  -- loop back
+    }
+
+    -- Buat 4 sisi border masing-masing Frame tipis
+    local sides = {
+        -- Top
+        { pos = UDim2.new(0, 0, 0, 0),          size = UDim2.new(1, 0, 0, BORDER_T), rot = 0   },
+        -- Right
+        { pos = UDim2.new(1, -BORDER_T, 0, 0),  size = UDim2.new(0, BORDER_T, 1, 0), rot = 90  },
+        -- Bottom
+        { pos = UDim2.new(0, 0, 1, -BORDER_T),  size = UDim2.new(1, 0, 0, BORDER_T), rot = 180 },
+        -- Left
+        { pos = UDim2.new(0, 0, 0, 0),          size = UDim2.new(0, BORDER_T, 1, 0), rot = 270 },
+    }
+
+    local sideFrames = {}
+    for i, s in ipairs(sides) do
+        local sf = Create("Frame", {
+            BackgroundColor3 = Color3.fromRGB(0,0,0),
+            BorderSizePixel  = 0,
+            Position         = s.pos,
+            Size             = s.size,
+            ZIndex           = 1,
+            ClipsDescendants = true,
+            Parent           = borderContainer,
+        })
+        -- gradient di tiap sisi
+        local grad = Instance.new("UIGradient")
+        grad.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0,   Color3.fromRGB(0,0,0)),
+            ColorSequenceKeypoint.new(0.3, Color3.fromRGB(0,0,0)),
+            ColorSequenceKeypoint.new(0.45, neonColors[1]),
+            ColorSequenceKeypoint.new(0.55, neonColors[2]),
+            ColorSequenceKeypoint.new(0.7, Color3.fromRGB(0,0,0)),
+            ColorSequenceKeypoint.new(1,   Color3.fromRGB(0,0,0)),
+        })
+        grad.Rotation = 0
+        grad.Parent   = sf
+        sideFrames[i] = { frame = sf, grad = grad, baseRot = s.rot }
+    end
+
+    -- Animasi: rotate offset warna via Rotation property gradient
+    -- Simulasi perputaran dengan mengubah Rotation semua sisi secara sinkron
+    local borderAngle  = 0
+    local colorIdx     = 1
+    local colorT       = 0
+
+    RunService.RenderStepped:Connect(function(dt)
+        if not self.Window.Parent then return end
+        if self.Minimized then return end
+
+        borderAngle = (borderAngle + dt * 45) % 360  -- 45 derajat/detik
+        colorT      = colorT + dt * 0.4
+
+        -- Interpolasi warna cycling
+        local ci   = math.floor(colorT % (#neonColors - 1)) + 1
+        local cf   = colorT % 1
+        local c1   = neonColors[ci]
+        local c2   = neonColors[math.min(ci + 1, #neonColors)]
+        local cNow = c1:Lerp(c2, cf)
+        local cNext = c2:Lerp(neonColors[math.min(ci + 2, #neonColors)] or c2, cf)
+
+        for _, s in ipairs(sideFrames) do
+            -- Geser gradient offset berdasarkan angle + base rotation sisi
+            local effectiveAngle = (borderAngle + s.baseRot) % 360
+            s.grad.Rotation = effectiveAngle
+            s.grad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0,    Color3.fromRGB(0,0,0)),
+                ColorSequenceKeypoint.new(0.25, Color3.fromRGB(0,0,0)),
+                ColorSequenceKeypoint.new(0.4,  cNow),
+                ColorSequenceKeypoint.new(0.6,  cNext),
+                ColorSequenceKeypoint.new(0.75, Color3.fromRGB(0,0,0)),
+                ColorSequenceKeypoint.new(1,    Color3.fromRGB(0,0,0)),
+            })
+        end
+    end)
+
     -- ── OPEN ANIMATION — spring bounce ──
     self.Window.Size                   = UDim2.new(0, 760, 0, 0)
     self.Window.BackgroundTransparency = 1
@@ -1780,14 +1884,40 @@ function Window:CreateTab(options)
         arrowBtn.MouseButton1Click:Connect(function()
             ddOpen = not ddOpen
             if ddOpen then
+                -- Hitung ulang posisi setiap kali dibuka (window bisa sudah dipindah/resize)
                 local absPos  = container.AbsolutePosition
                 local absSize = container.AbsoluteSize
-                local listH   = math.min(#items * 30 + 8, 180)
-                listFrame.Size     = UDim2.new(0, absSize.X, 0, listH)
-                listFrame.Position = UDim2.new(0, absPos.X, 0, absPos.Y + absSize.Y + 4)
+                local screenH = window.Gui.AbsoluteSize.Y
+                local screenW = window.Gui.AbsoluteSize.X
+                local listH   = math.min(#items * 32 + 8, 200)
+                local listW   = absSize.X
+
+                -- Flip ke atas jika tidak cukup ruang di bawah
+                local posY
+                if absPos.Y + absSize.Y + listH + 8 > screenH then
+                    posY = absPos.Y - listH - 4
+                else
+                    posY = absPos.Y + absSize.Y + 4
+                end
+
+                -- Clamp X agar tidak keluar layar kanan
+                local posX = math.min(absPos.X, screenW - listW - 4)
+
+                listFrame.Size     = UDim2.new(0, listW, 0, listH)
+                listFrame.Position = UDim2.new(0, posX, 0, posY)
                 listFrame.Visible  = true
+                -- Animasi expand
+                listFrame.Size = UDim2.new(0, listW, 0, 0)
+                Tween(listFrame, TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, listW, 0, listH)
+                })
+                Tween(arrowBtn, TweenInfo.new(0.18), { Rotation = 180 })
             else
-                listFrame.Visible = false
+                Tween(listFrame, TweenInfo.new(0.14, Enum.EasingStyle.Quart), {
+                    Size = UDim2.new(0, listFrame.AbsoluteSize.X, 0, 0)
+                })
+                task.delay(0.15, function() listFrame.Visible = false end)
+                Tween(arrowBtn, TweenInfo.new(0.18), { Rotation = 0 })
             end
         end)
 
@@ -1804,7 +1934,11 @@ function Window:CreateTab(options)
                            and pos.Y >= cAbs.Y and pos.Y <= cAbs.Y + cSize.Y
                 if not inL and not inC then
                     ddOpen = false
-                    listFrame.Visible = false
+                    Tween(listFrame, TweenInfo.new(0.14, Enum.EasingStyle.Quart), {
+                        Size = UDim2.new(0, listFrame.AbsoluteSize.X, 0, 0)
+                    })
+                    task.delay(0.15, function() listFrame.Visible = false end)
+                    Tween(arrowBtn, TweenInfo.new(0.18), { Rotation = 0 })
                 end
             end
         end)
@@ -2399,37 +2533,43 @@ function Window:CreateTab(options)
         svKnobInner.BackgroundColor3 = pendingColor
 
         -- ── DRAG SV ──
-        local draggingSV = false
-        local function onSvInput(pos)
-            local rel = pos - svBase.AbsolutePosition
-            s = math.clamp(rel.X / svBase.AbsoluteSize.X, 0, 1)
-            v = math.clamp(1 - rel.Y / svBase.AbsoluteSize.Y, 0, 1)
+        -- Pakai RunService.RenderStepped untuk drag yang smooth & reliable
+        -- Ini fix masalah AbsolutePosition salah saat panel baru buka
+        local draggingSV  = false
+        local draggingHue = false
+
+        local function calcSV(mousePos)
+            local abs = svBase.AbsolutePosition
+            local sz  = svBase.AbsoluteSize
+            if sz.X == 0 or sz.Y == 0 then return end
+            s = math.clamp((mousePos.X - abs.X) / sz.X, 0, 1)
+            v = math.clamp(1 - (mousePos.Y - abs.Y) / sz.Y, 0, 1)
             updateSvKnob()
         end
+
+        local function calcHue(mousePos)
+            local abs = hueBar.AbsolutePosition
+            local sz  = hueBar.AbsoluteSize
+            if sz.X == 0 then return end
+            h = math.clamp((mousePos.X - abs.X) / sz.X, 0, 1)
+            hueKnob.Position = UDim2.new(h, 0, 0.5, 0)
+            updateSvKnob()
+        end
+
         svHitbox.InputBegan:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1
             or i.UserInputType == Enum.UserInputType.Touch then
                 draggingSV = true
-                onSvInput(Vector2.new(i.Position.X, i.Position.Y))
+                calcSV(Vector2.new(i.Position.X, i.Position.Y))
             end
         end)
-
-        -- ── DRAG HUE ──
-        local draggingHue = false
-        local function onHueInput(pos)
-            local rel = pos.X - hueBar.AbsolutePosition.X
-            h = math.clamp(rel / hueBar.AbsoluteSize.X, 0, 1)
-            hueKnob.Position = UDim2.new(h, 0, 0.5, 0)
-            updateSvKnob()
-        end
         hueHitbox.InputBegan:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1
             or i.UserInputType == Enum.UserInputType.Touch then
                 draggingHue = true
-                onHueInput(Vector2.new(i.Position.X, i.Position.Y))
+                calcHue(Vector2.new(i.Position.X, i.Position.Y))
             end
         end)
-
         UserInputService.InputEnded:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1
             or i.UserInputType == Enum.UserInputType.Touch then
@@ -2437,11 +2577,13 @@ function Window:CreateTab(options)
                 draggingHue = false
             end
         end)
-        UserInputService.InputChanged:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseMovement
-            or i.UserInputType == Enum.UserInputType.Touch then
-                if draggingSV  then onSvInput(Vector2.new(i.Position.X, i.Position.Y))  end
-                if draggingHue then onHueInput(Vector2.new(i.Position.X, i.Position.Y)) end
+        -- RenderStepped untuk drag smooth (tidak miss frame)
+        RunService.RenderStepped:Connect(function()
+            if not panel.Visible then return end
+            if draggingSV or draggingHue then
+                local mp = UserInputService:GetMouseLocation()
+                if draggingSV  then calcSV(mp)  end
+                if draggingHue then calcHue(mp) end
             end
         end)
 
@@ -3195,14 +3337,15 @@ function Window:Notification(options)
                     break
                 end
             end
-            -- Geser semua notif yang masih ada
             for i, n in ipairs(self._notifStack) do
                 local newY = -88 - (i - 1) * (NOTIF_H + NOTIF_GAP)
                 Tween(n, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {
                     Position = UDim2.new(1, -276, 1, newY)
                 })
             end
+            _soundEnabled = false
             notif:Destroy()
+            task.delay(0.05, function() _soundEnabled = true end)
         end)
     end)
     return notif
