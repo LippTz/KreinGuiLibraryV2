@@ -106,16 +106,17 @@ local function PlayClick()
 end
 
 -- Hook otomatis ke semua TextButton yang dibuat lewat Create()
--- Wrapper tipis: intercept setelah Create jika class == TextButton
 local _origCreate = Create
 Create = function(cls, props)
     local obj = _origCreate(cls, props)
     if cls == "TextButton" and props.AutoButtonColor == false then
-        -- Hanya hook click, bukan hover/other events
         obj.MouseButton1Click:Connect(PlayClick)
     end
     return obj
 end
+
+-- [F1] FIX: RegisterColor sekarang selalu ke registry yang dikirim sebagai argumen
+local function RegisterColor(registry, obj, prop, themeKey)
     table.insert(registry, { obj = obj, prop = prop, key = themeKey })
 end
 
