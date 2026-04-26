@@ -88,8 +88,34 @@ local function AddShadow(parent, size, transparency)
     })
 end
 
--- [F1] FIX: RegisterColor sekarang selalu ke registry yang dikirim sebagai argumen
-local function RegisterColor(registry, obj, prop, themeKey)
+-- ══════════════════════════════════════════
+--  SOUND SYSTEM
+-- ══════════════════════════════════════════
+local _sound = Instance.new("Sound")
+_sound.SoundId      = "rbxassetid://3359534883"
+_sound.Volume       = 0.35
+_sound.RollOffMaxDistance = 0
+_sound.Parent       = game:GetService("SoundService")
+
+local function PlayClick()
+    -- Clone & play agar bisa overlap (klik cepat tidak ke-cancel)
+    local s = _sound:Clone()
+    s.Parent = game:GetService("SoundService")
+    s:Play()
+    game:GetService("Debris"):AddItem(s, 2)
+end
+
+-- Hook otomatis ke semua TextButton yang dibuat lewat Create()
+-- Wrapper tipis: intercept setelah Create jika class == TextButton
+local _origCreate = Create
+Create = function(cls, props)
+    local obj = _origCreate(cls, props)
+    if cls == "TextButton" and props.AutoButtonColor == false then
+        -- Hanya hook click, bukan hover/other events
+        obj.MouseButton1Click:Connect(PlayClick)
+    end
+    return obj
+end
     table.insert(registry, { obj = obj, prop = prop, key = themeKey })
 end
 
@@ -551,6 +577,8 @@ function Window.new(options)
     RegisterColor(registry, tbDivider, "BackgroundColor3", "TitleStroke")
 
     -- ── TRAFFIC LIGHTS ──
+    -- Jarak antar dot: 26px (cukup renggang agar hitbox tidak overlap)
+    -- Dot: 14x14, Hitbox: 30x30, centered di dot masing-masing
     local tlTween = TweenInfo.new(0.15)
     local function TrafficLight(color, posX, hoverIcon, onClick)
         local dot = Create("Frame", {
@@ -572,12 +600,14 @@ function Window.new(options)
             ZIndex     = 13,
             Parent     = dot,
         })
+        -- Hitbox 30x30, tepat centered di dot, tidak overlap tetangga
         local hitbox = Create("TextButton", {
             BackgroundTransparency = 1,
             BorderSizePixel        = 0,
             Text                   = "",
-            Position               = UDim2.new(0, posX - 7, 0.5, -14),
-            Size                   = UDim2.new(0, 28, 0, 28),
+            AnchorPoint            = Vector2.new(0.5, 0.5),
+            Position               = UDim2.new(0, posX + 7, 0.5, 0),
+            Size                   = UDim2.new(0, 30, 0, 30),
             ZIndex                 = 14,
             AutoButtonColor        = false,
             Parent                 = self.TitleBar,
@@ -593,9 +623,10 @@ function Window.new(options)
         hitbox.MouseButton1Click:Connect(onClick)
         return dot
     end
+    -- Posisi: 14, 40, 66 (jarak 26px antar center = tidak overlap hitbox 30px)
     TrafficLight(self.Colors.TrafficRed,    14, "✕", function() self:Destroy() end)
-    TrafficLight(self.Colors.TrafficYellow, 34, "–", function() self:ToggleMinimize() end)
-    TrafficLight(self.Colors.TrafficGreen,  54, "+", function() self:ToggleMaximize() end)
+    TrafficLight(self.Colors.TrafficYellow, 40, "–", function() self:ToggleMinimize() end)
+    TrafficLight(self.Colors.TrafficGreen,  66, "+", function() self:ToggleMaximize() end)
 
     -- Icon + Title
     local titleIcon = Create("TextLabel", {
@@ -1098,7 +1129,7 @@ function Window.new(options)
         end
     end)
     UserInputService.InputChanged:Connect(function(input)
-        if resizing and (
+        if resizing and not self.Minimized and not self.Maximized and (
             input.UserInputType == Enum.UserInputType.MouseMovement
             or input.UserInputType == Enum.UserInputType.Touch
         ) then
@@ -1109,10 +1140,10 @@ function Window.new(options)
         end
     end)
 
-    -- ── OPEN ANIMATION ──
+    -- ── OPEN ANIMATION — spring bounce ──
     self.Window.Size                   = UDim2.new(0, 760, 0, 0)
     self.Window.BackgroundTransparency = 1
-    Tween(self.Window, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+    Tween(self.Window, TweenInfo.new(0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size                   = UDim2.new(0, 760, 0, 540),
         BackgroundTransparency = 0,
     })
@@ -2058,7 +2089,10 @@ function Window:CreateTab(options)
 
         -- Panel picker (di-parent ke Gui supaya tidak di-clip scroll)
         local panelW = 280
-        local panelH = 320
+        -- panelH dihitung manual:
+        -- SQ_PAD(12) + 8 + SQ_H(170) + 12(gap) + hueBar(14) + 12(gap)
+        -- + label(12) + 14(gap) + swatch(28) + 10(gap) + hex(26) + 10(gap) + btn(34) + PAD(12)
+        local panelH = 12 + 8 + 170 + 12 + 14 + 12 + 12 + 14 + 28 + 10 + 26 + 10 + 34 + 12  -- = 374
         local panel = Create("Frame", {
             BackgroundColor3 = window.Colors.SectionBg,
             BorderSizePixel  = 0,
@@ -2146,13 +2180,13 @@ function Window:CreateTab(options)
         })
         AddCorner(svKnobInner, 5)
 
-        -- Button transparan di atas sv square untuk input drag
+        -- Hitbox di atas semua layer SV (ZIndex > knob 60)
         local svHitbox = Create("TextButton", {
             BackgroundTransparency = 1,
             BorderSizePixel        = 0,
             Text                   = "",
             Size                   = UDim2.new(1, 0, 1, 0),
-            ZIndex                 = 58,
+            ZIndex                 = 62,
             AutoButtonColor        = false,
             Parent                 = svBase,
         })
@@ -2349,14 +2383,19 @@ function Window:CreateTab(options)
 
         -- ── REFRESH LOGIC ──
         local function updateSvKnob()
-            svKnob.Position      = UDim2.new(s, 0, 1 - v, 0)
+            svKnob.Position              = UDim2.new(s, 0, 1 - v, 0)
             svKnobInner.BackgroundColor3 = Color3.fromHSV(h, s, v)
-            pendingColor         = Color3.fromHSV(h, s, v)
-            swNew.BackgroundColor3 = pendingColor
-            hexLabel.Text          = toHex(pendingColor)
-            svBase.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+            pendingColor                 = Color3.fromHSV(h, s, v)
+            swNew.BackgroundColor3       = pendingColor
+            hexLabel.Text                = toHex(pendingColor)
+            svBase.BackgroundColor3      = Color3.fromHSV(h, 1, 1)
         end
-        updateSvKnob()
+        -- Init hex label & swatch sekarang (tanpa tunggu AbsolutePosition)
+        hexLabel.Text              = toHex(pendingColor)
+        swNew.BackgroundColor3     = pendingColor
+        svBase.BackgroundColor3    = Color3.fromHSV(h, 1, 1)
+        svKnob.Position            = UDim2.new(s, 0, 1 - v, 0)
+        svKnobInner.BackgroundColor3 = pendingColor
 
         -- ── DRAG SV ──
         local draggingSV = false
@@ -3198,35 +3237,71 @@ end
 --  Window Controls
 -- ─────────────────────────────────────────
 function Window:ToggleMinimize()
-    local ti = TweenInfo.new(0.35, Enum.EasingStyle.Quint)
+    -- Jangan minimize kalau lagi maximized — restore dulu
+    if self.Maximized then self:ToggleMaximize() return end
+
+    local tiOut = TweenInfo.new(0.32, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+    local tiIn  = TweenInfo.new(0.42, Enum.EasingStyle.Back,  Enum.EasingDirection.Out)
     self.Minimized = not self.Minimized
+
     if self.Minimized then
         self._origSize = self.Window.Size
         self._origPos  = self.Window.Position
-        Tween(self.Window, ti, { Size = UDim2.new(0, 220, 0, 52), Position = UDim2.new(0, 14, 1, -70) })
+        -- Sembunyikan konten & sidebar agar animasi collapse terlihat bersih
+        self.ContentArea.Visible = false
+        self.Sidebar.Visible     = false
+        -- Minimize ke title bar saja, pojok kiri bawah layar
+        Tween(self.Window, tiOut, {
+            Size     = UDim2.new(0, 260, 0, 52),
+            Position = UDim2.new(0, 14, 1, -70),
+        })
     else
-        Tween(self.Window, ti, { Size = self._origSize, Position = self._origPos })
+        -- Restore
+        Tween(self.Window, tiIn, {
+            Size     = self._origSize,
+            Position = self._origPos,
+        })
+        task.delay(0.25, function()
+            if not self.Minimized then
+                self.ContentArea.Visible = true
+                self.Sidebar.Visible     = true
+            end
+        end)
     end
 end
 
 function Window:ToggleMaximize()
-    local ti = TweenInfo.new(0.4, Enum.EasingStyle.Quint)
+    -- Jangan maximize kalau lagi minimized
+    if self.Minimized then return end
+
+    local tiOut = TweenInfo.new(0.38, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+    local tiIn  = TweenInfo.new(0.32, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
     self.Maximized = not self.Maximized
+
     if self.Maximized then
         self._prevSize = self.Window.Size
         self._prevPos  = self.Window.Position
         local vp = self.Gui.AbsoluteSize
-        Tween(self.Window, ti, { Size = UDim2.new(0, vp.X, 0, vp.Y), Position = UDim2.new(0, 0, 0, 0) })
+        -- Scale-up dari posisi saat ini ke fullscreen
+        Tween(self.Window, tiOut, {
+            Size     = UDim2.new(0, vp.X, 0, vp.Y),
+            Position = UDim2.new(0, 0, 0, 0),
+        })
     else
-        Tween(self.Window, ti, { Size = self._prevSize, Position = self._prevPos })
+        Tween(self.Window, tiIn, {
+            Size     = self._prevSize,
+            Position = self._prevPos,
+        })
     end
 end
 
 function Window:Destroy()
-    Tween(self.Window, TweenInfo.new(0.35, Enum.EasingStyle.Quint), {
-        Size = UDim2.new(0, 760, 0, 0), BackgroundTransparency = 1,
+    local ti = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+    Tween(self.Window, ti, {
+        Size                   = UDim2.new(0, self.Window.AbsoluteSize.X, 0, 0),
+        BackgroundTransparency = 1,
     })
-    task.delay(0.4, function() self.Gui:Destroy() end)
+    task.delay(0.32, function() self.Gui:Destroy() end)
     for i, w in ipairs(Library.Windows) do
         if w == self then table.remove(Library.Windows, i); break end
     end
