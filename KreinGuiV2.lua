@@ -1431,8 +1431,11 @@ function Window:CreateTab(opts)
             Click(); if callback then callback() end
         end)
 
-        win:_r(btn, "BackgroundColor3",
-            style=="danger" and "BtnDanger" or style=="secondary" and "BtnSecondary" or "BtnPrimary")
+        local btnThemeKey
+        if style=="danger" then btnThemeKey="BtnDanger"
+        elseif style=="secondary" then btnThemeKey="BtnSecondary"
+        else btnThemeKey="BtnPrimary" end
+        win:_r(btn, "BackgroundColor3", btnThemeKey)
         if style=="secondary" then win:_r(btn, "TextColor3", "Text") end
         win:_regSearch(label, tab, f)
         return btn
@@ -1445,8 +1448,10 @@ function Window:CreateTab(opts)
         local cKey = o.ConfigKey
         local f, right = Row(o.Title or "Toggle")
 
+        local trackCol = en and win.C.ToggleOn or win.C.ToggleOff
+        local knobPos  = en and UDim2.new(1,-22,.5,0) or UDim2.new(0,2,.5,0)
         local track = New("Frame", {
-            BackgroundColor3=en and win.C.ToggleOn or win.C.ToggleOff,
+            BackgroundColor3=trackCol,
             BorderSizePixel=0, AnchorPoint=Vector2.new(1,.5),
             Position=UDim2.new(1,-6,.5,0), Size=UDim2.new(0,46,0,24),
             ZIndex=5, Parent=right
@@ -1455,7 +1460,7 @@ function Window:CreateTab(opts)
         local knob = New("Frame", {
             BackgroundColor3=Color3.new(1,1,1), BorderSizePixel=0,
             AnchorPoint=Vector2.new(0,.5),
-            Position=en and UDim2.new(1,-22,.5,0) or UDim2.new(0,2,.5,0),
+            Position=knobPos,
             Size=UDim2.new(0,20,0,20), ZIndex=6, Parent=track
         })
         Corner(10, knob)
@@ -1616,11 +1621,12 @@ function Window:CreateTab(opts)
         Shadow(list, 20, .55)
         win:_r(list,"BackgroundColor3","DdBg")
 
+        local sbThick = #items*ITEM_H>MAX_H and 3 or 0
         local listScroll = New("ScrollingFrame", {
             BackgroundTransparency=1, BorderSizePixel=0,
             Size=UDim2.new(1,0,1,0), CanvasSize=UDim2.new(0,0,0,0),
             AutomaticCanvasSize=Enum.AutomaticSize.Y,
-            ScrollBarThickness=#items*ITEM_H>MAX_H and 3 or 0,
+            ScrollBarThickness=sbThick,
             ScrollBarImageColor3=win.C.Accent,
             ScrollingDirection=Enum.ScrollingDirection.Y,
             ZIndex=53, Parent=list
@@ -1979,12 +1985,14 @@ function Window:CreateTab(opts)
                 BackgroundTransparency=.6,BorderSizePixel=0,Text="",
                 Size=UDim2.new(1,0,0,36),AutoButtonColor=false,ZIndex=5,Parent=crd})
             Corner(7,row)
-            local dot=New("Frame",{BackgroundColor3=item==cur and Color3.new(1,1,1) or win.C.Sub,
+            local dotCol = item==cur and Color3.new(1,1,1) or win.C.Sub
+            local dot=New("Frame",{BackgroundColor3=dotCol,
                 BorderSizePixel=0,AnchorPoint=Vector2.new(0,.5),
                 Position=UDim2.new(0,10,.5,0),Size=UDim2.new(0,8,0,8),ZIndex=6,Parent=row})
             Corner(100,dot)
+            local lblCol = item==cur and Color3.new(1,1,1) or win.C.Text
             local lbl=New("TextLabel",{BackgroundTransparency=1,Text=item,
-                TextColor3=item==cur and Color3.new(1,1,1) or win.C.Text,
+                TextColor3=lblCol,
                 Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,
                 Size=UDim2.new(1,-28,1,0),Position=UDim2.new(0,26,0,0),ZIndex=6,Parent=row})
             if item==cur then row.BackgroundTransparency=0; row.BackgroundColor3=win.C.Accent end
